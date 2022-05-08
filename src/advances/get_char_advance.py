@@ -21,7 +21,7 @@ def get_advances(filename: str) -> dict[str, int]:
 def get_char_advance(char: str, *, bold: bool = False) -> float:
     """Gets the number of in-game pixels that a character takes up horizontally.
 
-    ⚠️ Assumes the input is exactly one character (and also not a line break).
+    ⚠️ Assumes the input is a string with length 1.
     """
 
     # Whether the `char` only exists in the legacy unicode font.
