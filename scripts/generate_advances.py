@@ -46,9 +46,9 @@ class Font(TypedDict):
 
 print("Generating advances...")
 
-# A range of char codes for every 16-bit code point.
+# A range of all 16-bit code points.
 LEGACY_UNICODE = range(0xFFFF + 1)
-# A range of char codes for every surrogate code point.
+# A range of all surrogate code points.
 SURROGATES = range(0xD800, 0xDFFF + 1)
 
 # The width of the space between glyphs in in-game pixels.
@@ -56,10 +56,10 @@ KERNING_WIDTH = 1
 # The default height of a bitmap font glyph in in-game pixels.
 DEFAULT_GLYPH_HEIGHT = 8
 
-# A mapping from each code point to its advance amount in in-game pixels, excluding code
+# A mapping from each character to its advance amount in in-game pixels, excluding code
 # points only covered by the legacy unicode font.
 advances: dict[str, int] = {}
-# A mapping from each legacy unicode font code point to its advance amount in in-game
+# A mapping from each legacy unicode font character to its advance amount in in-game
 # pixels, excluding ones already covered by `advances`.
 legacy_unicode_advances: dict[str, int] = {}
 
@@ -89,10 +89,10 @@ for provider in font["providers"]:
         for row_index in range(row_count):
             row = provider["chars"][row_index]
             for column_index in range(column_count):
-                code_point = row[column_index]
+                char = row[column_index]
 
-                if code_point in {"\u0000", "\u0020"}:
-                    # These code points are ignored in bitmap font providers.
+                if char in {"\u0000", "\u0020"}:
+                    # These characters are ignored in bitmap font providers.
                     continue
 
                 glyph_x = column_index * column_width
@@ -116,7 +116,7 @@ for provider in font["providers"]:
                 # so we're going with it.
                 advance = math.trunc(glyph_width * glyph_scale + 0.5) + KERNING_WIDTH
 
-                advances[code_point] = advance
+                advances[char] = advance
 
     elif provider["type"] == "legacy_unicode":
         sizes_url = f"{ASSETS}/{provider['sizes'].partition(':')[2]}"
