@@ -1,0 +1,1 @@
+def get_single_line_advance(component: )
