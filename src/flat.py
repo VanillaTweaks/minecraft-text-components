@@ -18,8 +18,8 @@ def flat(
     recursively flatten all arrays and `extra` properties of a text component into one
     big array.
 
-    Never yields `''`. It's safe to shallowly mutate any yielded object. Doesn't
-    transform `with` properties at all.
+    Never yields `''`. All yielded `dict`s are shallow copies if not new. Doesn't
+    transform `with` values at all.
     """
 
     formatting |= get_formatting(component)
