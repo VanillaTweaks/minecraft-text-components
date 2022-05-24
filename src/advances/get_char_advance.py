@@ -1,6 +1,8 @@
 import json
 from functools import cache
 
+from ..types import TextComponentFormatting
+
 # The advance in in-game pixels added to a non-legacy-unicode character when bold.
 BOLD_ADVANCE = 1.0
 # The advance in in-game pixels added to a legacy unicode character when bold.
@@ -18,7 +20,7 @@ def get_advances(filename: str) -> dict[str, int]:
         return json.load(file)
 
 
-def get_char_advance(char: str, *, bold: bool = False) -> float:
+def get_char_advance(char: str, formatting: TextComponentFormatting = {}) -> float:
     """Gets the number of in-game pixels that a character takes up horizontally.
 
     ⚠️ Assumes the input is a string with length 1.
@@ -50,7 +52,7 @@ def get_char_advance(char: str, *, bold: bool = False) -> float:
                 # The `char` is invalid.
                 advance = INVALID_CHAR_ADVANCE
 
-    if bold:
+    if formatting.get("bold") == True:
         advance += BOLD_LEGACY_UNICODE_ADVANCE if legacy_unicode else BOLD_ADVANCE
 
     return advance

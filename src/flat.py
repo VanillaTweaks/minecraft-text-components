@@ -11,7 +11,6 @@ from .types import (
 
 def flat(
     component: TextComponent,
-    # Formatting for the component and its children to inherit.
     formatting: TextComponentFormatting = {},
 ) -> Generator[TextComponentText | TextComponentDict, None, None]:
     """Generates the sequence of `TextComponentText`s and `TextComponentDict`s needed to
@@ -32,7 +31,7 @@ def flat(
         return
 
     if isinstance(component, dict):
-        component_without_extra: TextComponentDict = component.copy()
+        component_without_extra = component.copy()
         extra = component_without_extra.pop("extra", None)
 
         yield component_without_extra | formatting  # type: ignore
