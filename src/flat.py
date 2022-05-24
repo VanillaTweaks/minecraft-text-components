@@ -11,7 +11,7 @@ from .types import (
 
 def flat(
     component: TextComponent,
-    formatting: TextComponentFormatting = {},
+    formatting: TextComponentFormatting | None = None,
 ) -> Generator[TextComponentText | TextComponentDict, None, None]:
     """Generates the sequence of `TextComponentText`s and `TextComponentDict`s needed to
     recursively flatten all arrays and `extra` properties of a text component into one
@@ -20,6 +20,9 @@ def flat(
     Never yields `''`. All yielded `dict`s are shallow copies if not new. Doesn't
     transform `with` values at all.
     """
+
+    if formatting is None:
+        formatting = {}
 
     formatting |= get_formatting(component)
 
@@ -47,7 +50,6 @@ def flat(
 
     if formatting:
         yield {"text": component, **formatting}  # type: ignore
-
         return
 
     yield component

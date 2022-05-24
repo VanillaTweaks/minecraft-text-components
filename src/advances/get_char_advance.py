@@ -20,11 +20,17 @@ def get_advances(filename: str) -> dict[str, int]:
         return json.load(file)
 
 
-def get_char_advance(char: str, formatting: TextComponentFormatting = {}) -> float:
+def get_char_advance(
+    char: str,
+    formatting: TextComponentFormatting | None = None,
+) -> float:
     """Gets the number of in-game pixels that a character takes up horizontally.
 
     ⚠️ Assumes the input is a string with length 1.
     """
+
+    if formatting is None:
+        formatting = {}
 
     # Whether the `char` only exists in the legacy unicode font.
     legacy_unicode = False

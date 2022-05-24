@@ -1,17 +1,20 @@
 from ..flat import flat
-from ..types import TextComponent, TextComponentFormatting
+from ..types import TextComponent, TextComponentFormatting, TextComponentText
 from .get_char_advance import get_char_advance
 
 
 def get_line_advance(
     component: TextComponent,
-    formatting: TextComponentFormatting = {},
+    formatting: TextComponentFormatting | None = None,
 ) -> float:
     """Gets the width in in-game pixels that a single-line `TextComponent` takes up."""
 
+    if formatting is None:
+        formatting = {}
+
     advance = 0
 
-    if not isinstance(component, (dict, list)):
+    if isinstance(component, TextComponentText):
         for char in str(component):
             advance += get_char_advance(char, formatting)
 
@@ -25,9 +28,9 @@ def get_line_advance(
                     f"component:\n{repr(subcomponent)}"
                 )
 
-            advance += get_line_advance(subcomponent["text"])  # type: ignore
+            advance += get_line_advance(subcomponent["text"], formatting)  # type: ignore
             continue
 
-        advance += get_line_advance(subcomponent)
+        advance += get_line_advance(subcomponent, formatting)
 
     return advance
