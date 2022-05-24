@@ -1,15 +1,20 @@
 from collections.abc import Generator
 
 from .formatting import get_formatting
-from .types import TextComponent, TextComponentDict, TextComponentFormatting
+from .types import (
+    TextComponent,
+    TextComponentDict,
+    TextComponentFormatting,
+    TextComponentText,
+)
 
 
 def flat(
     component: TextComponent,
     # Formatting for the component and its children to inherit.
     formatting: TextComponentFormatting = {},
-) -> Generator[TextComponent, None, None]:
-    """Generates the series of `TextComponentText`s and `TextComponentDict`s needed to
+) -> Generator[TextComponentText | TextComponentDict, None, None]:
+    """Generates the sequence of `TextComponentText`s and `TextComponentDict`s needed to
     recursively flatten all arrays and `extra` properties of a text component into one
     big array.
 
