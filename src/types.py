@@ -137,4 +137,8 @@ TextComponentDict = (
     | TextComponentNBTDict
 )
 
-TextComponent = TextComponentDict | TextComponentText | list["TextComponent"]
+TextComponent = TextComponentText | TextComponentDict | list["TextComponent"]
+
+# This isn't completely flat, since it still allows for `extra`, but it's as close as we
+#  can practically get.
+FlatTextComponent = TextComponentText | TextComponentDict

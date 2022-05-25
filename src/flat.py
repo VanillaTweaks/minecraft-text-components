@@ -1,18 +1,13 @@
 from collections.abc import Generator
 
 from .formatting import get_formatting
-from .types import (
-    TextComponent,
-    TextComponentDict,
-    TextComponentFormatting,
-    TextComponentText,
-)
+from .types import FlatTextComponent, TextComponent, TextComponentFormatting
 
 
 def flat(
     component: TextComponent,
     formatting: TextComponentFormatting | None = None,
-) -> Generator[TextComponentText | TextComponentDict, None, None]:
+) -> Generator[FlatTextComponent, None, None]:
     """Generates the sequence of `TextComponentText`s and `TextComponentDict`s needed to
     recursively flatten all arrays and `extra` properties of a text component into one
     big array.
