@@ -19,7 +19,7 @@ class TextComponentClickEvent(TypedDict):
         | Literal["change_page"]
         | Literal["copy_to_clipboard"]
     )
-    value: str
+    value: TextComponentText
 
 
 @final
@@ -69,7 +69,7 @@ class TextComponentFormatting(TypedDict, total=False):
     underlined: bool
     strikethrough: bool
     obfuscated: bool
-    insertion: str
+    insertion: TextComponentText
     clickEvent: TextComponentClickEvent
     hoverEvent: TextComponentHoverEvent
 
