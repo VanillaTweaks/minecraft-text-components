@@ -28,7 +28,7 @@ def get_line_advance(
                     f"component:\n{repr(subcomponent)}"
                 )
 
-            advance += get_line_advance(subcomponent["text"], formatting)  # type: ignore
+            advance += get_line_advance(subcomponent["text"], formatting)
             continue
 
         advance += get_line_advance(subcomponent, formatting)

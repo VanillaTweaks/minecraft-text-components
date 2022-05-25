@@ -83,7 +83,7 @@ def split(
                 append_to_previous_subcomponent(subcomponent)
                 continue
 
-            substrings = split_text(subcomponent["text"], sep, maxsplit)  # type: ignore
+            substrings = split_text(subcomponent["text"], sep, maxsplit)
             split_subcomponent = [
                 cast(TextComponentDict, {**subcomponent, "text": substring})
                 for substring in substrings

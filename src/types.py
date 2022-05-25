@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, final
 
 from typing_extensions import NotRequired, Required
 
@@ -72,10 +72,12 @@ class TextComponentDictBase(TextComponentChildren, TextComponentFormatting):
     pass
 
 
+@final
 class TextComponentTextDict(TextComponentDictBase):
     text: TextComponentText
 
 
+@final
 class TextComponentTranslationDict(
     # This is necessary because `with` is a reserved keyword.
     TypedDict(
@@ -93,15 +95,18 @@ class TextComponentScore(TypedDict):
     value: NotRequired[str]
 
 
+@final
 class TextComponentScoreDict(TextComponentDictBase):
     score: TextComponentScore
 
 
+@final
 class TextComponentSelectorDict(TextComponentDictBase, total=False):
     selector: Required[str]
     separator: "TextComponent"
 
 
+@final
 class TextComponentKeybindDict(TextComponentDictBase):
     keybind: str
 
@@ -112,14 +117,17 @@ class TextComponentDictNBTBase(TextComponentDictBase, total=False):
     separator: "TextComponent"
 
 
+@final
 class TextComponentBlockNBTDict(TextComponentDictNBTBase):
     block: str
 
 
+@final
 class TextComponentEntityNBTDict(TextComponentDictNBTBase):
     entity: str
 
 
+@final
 class TextComponentStorageNBTDict(TextComponentDictNBTBase):
     storage: str
 
