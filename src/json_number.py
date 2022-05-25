@@ -57,7 +57,7 @@ def patch_make_iterencode_default(i: int, default: object):
                 #  `patched_int_repr` to encode them.
                 return True
 
-            return default(__obj, __class_or_tuple)  #  type: ignore
+            return default(__obj, __class_or_tuple)  # type: ignore
 
         return patched_isinstance
 
