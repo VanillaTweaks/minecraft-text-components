@@ -9,6 +9,7 @@ class TextComponentChildren(TypedDict, total=False):
     extra: list["TextComponent"]
 
 
+@final
 class TextComponentClickEvent(TypedDict):
     action: (
         Literal["open_url"]
@@ -21,28 +22,33 @@ class TextComponentClickEvent(TypedDict):
     value: str
 
 
+@final
 class TextComponentItem(TypedDict):
     id: str
     count: NotRequired[int]
     tag: NotRequired[str]
 
 
+@final
 class TextComponentEntity(TypedDict, total=False):
     name: "TextComponent"
     type: Required[str]
     id: Required[str]
 
 
+@final
 class TextComponentShowTextHoverEvent(TypedDict):
     action: Literal["show_text"]
     contents: "TextComponent"
 
 
+@final
 class TextComponentShowItemHoverEvent(TypedDict):
     action: Literal["show_item"]
     contents: TextComponentItem
 
 
+@final
 class TextComponentShowEntityHoverEvent(TypedDict):
     action: Literal["show_entity"]
     contents: TextComponentEntity
@@ -89,6 +95,7 @@ class TextComponentTranslationDict(
     translate: str
 
 
+@final
 class TextComponentScore(TypedDict):
     name: str
     objective: str
