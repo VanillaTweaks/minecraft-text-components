@@ -1,7 +1,6 @@
-from advances.get_line_advance import get_line_advance
-
 from ..split import split
 from ..types import TextComponent
+from .get_line_advance import get_line_advance
 
 
 def get_advance(component: TextComponent):
