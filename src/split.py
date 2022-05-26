@@ -14,8 +14,6 @@ UncallableSeparator = str | None | Pattern[str]
 CallableSeparator = Callable[[str], list[str]]
 Separator = UncallableSeparator | CallableSeparator
 
-SplitComponent = FlatTextComponent | list[FlatTextComponent]
-
 
 def split_text(
     component: TextComponentText,
@@ -44,7 +42,7 @@ def split(
     component: TextComponent,
     sep: UncallableSeparator = None,
     maxsplit: int = -1,
-) -> Generator[SplitComponent, None, None]:
+) -> Generator[TextComponent, None, None]:
     ...
 
 
@@ -52,7 +50,7 @@ def split(
 def split(
     component: TextComponent,
     sep: CallableSeparator,
-) -> Generator[SplitComponent, None, None]:
+) -> Generator[TextComponent, None, None]:
     ...
 
 
@@ -60,13 +58,13 @@ def split(
     component: TextComponent,
     sep: Separator = None,
     maxsplit: int = -1,
-):
+) -> Generator[TextComponent, None, None]:
     """Generates the sequence of subcomponents split from a specified text component.
 
     Always yields at least one value.
     """
 
-    previous_subcomponent: SplitComponent | None = None
+    previous_subcomponent: TextComponent | None = None
 
     def append_to_previous_subcomponent(subcomponent: FlatTextComponent):
         nonlocal previous_subcomponent
@@ -101,7 +99,11 @@ def split(
                 append_to_previous_subcomponent(split_subcomponent_item)
                 continue
 
-            yield cast(SplitComponent, previous_subcomponent)
+            # We can assert `previous_subcomponent` isn't `None` because we appended to
+            #  it in the first iteration.
+            assert previous_subcomponent is not None
+
+            yield previous_subcomponent
             previous_subcomponent = split_subcomponent_item
 
     yield previous_subcomponent or ""
