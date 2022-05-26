@@ -28,7 +28,8 @@ def split_text(
         split_component = sep(component)
     elif isinstance(sep, Pattern):
         split_component = [
-            "" if subcomponent is None else subcomponent
+            # Ensure `None` is never returned.
+            subcomponent or ""
             for subcomponent in cast(list[str | None], sep.split(component, maxsplit))
         ]
     else:
