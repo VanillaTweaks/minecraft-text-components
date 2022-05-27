@@ -7,7 +7,7 @@ def get_line_advance(
     component: TextComponent,
     formatting: TextComponentFormatting | None = None,
 ) -> float:
-    """Gets the width in in-game pixels that a single-line `TextComponent` takes up."""
+    """Gets the width in in-game pixels that a single-line text component takes up."""
 
     if formatting is None:
         formatting = {}
