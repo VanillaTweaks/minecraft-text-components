@@ -1,8 +1,11 @@
+from .minify.minify import minify
 from .types import TextComponent
 
 
 def join(components: list[TextComponent], sep: TextComponent):
-    """Concatenates a list of text components into one text component."""
+    """Concatenates a list of text components into one text component, automatically
+    minified.
+    """
 
     joined_component: list[TextComponent] = [""]
 
@@ -12,4 +15,4 @@ def join(components: list[TextComponent], sep: TextComponent):
 
         joined_component.append(component)
 
-    return joined_component
+    return minify(joined_component)
