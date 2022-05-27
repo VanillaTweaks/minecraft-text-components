@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from .advances.get_line_advance import get_line_advance
-from .container import container_width
+from .container import container
 from .join import join
 from .split import split
 from .types import TextComponent
@@ -31,7 +31,7 @@ def pad_each_line(
             # If the line is empty, leave it empty rather than adding useless padding.
             return ""
 
-        if advance > container_width:
+        if advance > container.width:
             raise ValueError(
                 "The width of the following line exceeds the container width:\n"
                 + repr(line)
@@ -41,7 +41,7 @@ def pad_each_line(
         padding = whitespace(ideal_padding_advance)
         padding_advance = get_line_advance(padding)
 
-        if advance + padding_advance > container_width:
+        if advance + padding_advance > container.width:
             padding = whitespace(ideal_padding_advance, floor=True)
 
         return ["", padding, line]

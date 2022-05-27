@@ -1,5 +1,6 @@
 import json
 from functools import cache
+from pathlib import Path
 
 from ..types import TextComponentFormatting
 
@@ -16,7 +17,9 @@ INVALID_CHAR_ADVANCE = 8.0
 
 @cache
 def get_advances(filename: str) -> dict[str, int]:
-    with open(f"{__file__}/../../data/{filename}.json", encoding="utf-8") as file:
+    path = Path(__file__).parent / f"../../data/{filename}.json"
+
+    with open(path, encoding="utf-8") as file:
         return json.load(file)
 
 
