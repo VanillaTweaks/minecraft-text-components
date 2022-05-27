@@ -6,6 +6,7 @@ from .join import join
 from .split import split
 from .types import TextComponent
 from .whitespace import whitespace
+from .wrap import wrap
 
 GetIdealPadding = Callable[[float], float]
 
@@ -46,4 +47,5 @@ def pad_each_line(
 
         return ["", padding, line]
 
-    return join([pad_line(line) for line in split(component, "\n")], "\n")
+    lines = split(wrap(component), "\n")
+    return join([pad_line(line) for line in lines], "\n")
