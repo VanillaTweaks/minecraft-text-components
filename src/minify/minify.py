@@ -6,4 +6,4 @@ def minify(component: TextComponent) -> TextComponent:
     changing its in-game appearance.
     """
 
-    ...
+    return component
