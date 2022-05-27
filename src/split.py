@@ -28,7 +28,11 @@ def split_text(
         split_component = [
             # Ensure `None` is never returned.
             subcomponent or ""
-            for subcomponent in cast(list[str | None], sep.split(component, maxsplit))
+            for subcomponent in cast(
+                list[str | None],
+                # `str.split` has `maxsplit=-1`, but `re.split` has `maxsplit=0`.
+                sep.split(component, 0 if maxsplit == -1 else maxsplit),
+            )
         ]
     else:
         split_component = component.split(sep, maxsplit)
