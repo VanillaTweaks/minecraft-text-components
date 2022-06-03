@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
 from ..formatting import WHITESPACE_UNAFFECTED_BY_KEYS
-from ..string import string
+from ..jsstr import jsstr
 from ..regex import LINE_BREAKS
 from ..types import FlatTextComponent
 from .minify import minify
@@ -21,7 +21,7 @@ def reduced(subcomponents: Iterator[FlatTextComponent]):
                     # Reduce empty strings to nothing by not yielding anything.
                     continue
 
-                text = string(subcomponent["text"])
+                text = jsstr(subcomponent["text"])
                 text_is_whitespace = text.isspace()
 
                 if text_is_whitespace:

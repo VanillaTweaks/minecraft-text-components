@@ -1,6 +1,6 @@
 from collections.abc import Collection
 
-from .string import string
+from .jsstr import jsstr
 from .regex import LINE_BREAKS
 from .types import FlatTextComponent, TextComponent, TextComponentFormatting
 
@@ -40,9 +40,9 @@ def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str
 
     if isinstance(component, dict):
         if "text" in component:
-            text = string(component["text"])
+            text = jsstr(component["text"])
     else:
-        text = string(component)
+        text = jsstr(component)
 
     text_is_whitespace = False
 
