@@ -7,7 +7,7 @@ from inspect import Parameter
 from types import UnionType
 from typing import Any, Final
 
-JSON_NUMBER_PATTERN = re.compile(r"^\d+(?:\.\d+)?(?:e\d+)?$", re.ASCII | re.IGNORECASE)
+JSON_NUMBER_PATTERN = re.compile(r"^\d+(?:\.\d+)?(?:[Ee][+-]?\d+)?$", re.ASCII)
 
 
 @dataclass

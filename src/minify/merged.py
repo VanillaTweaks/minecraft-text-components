@@ -1,6 +1,11 @@
 from collections.abc import Iterator
 
-from ..formatting import FORMATTING_KEYS, WHITESPACE_AFFECTED_BY_KEYS
+from ..formatting import (
+    FORMATTING_KEYS,
+    WHITESPACE_AFFECTED_BY_KEYS,
+    is_affected_by_inheriting_from,
+)
+from ..string import string
 from ..types import FlatTextComponent
 
 
@@ -35,9 +40,9 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
                         # Both this subcomponent and the previous one have `text` with
                         #  distinguishable formatting.
 
-                        text = str(subcomponent["text"])
+                        text = string(subcomponent["text"])
                         text_is_whitespace = text.isspace()
-                        previous_text = str(previous_subcomponent["text"])
+                        previous_text = string(previous_subcomponent["text"])
                         previous_text_is_whitespace = previous_text.isspace()
 
                         keys_which_must_equal = FORMATTING_KEYS
@@ -61,4 +66,41 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
                             previous_subcomponent["text"] = previous_text + text
                             merged = True
 
-                elif
+                elif not is_affected_by_inheriting_from(
+                    previous_subcomponent, subcomponent
+                ):
+                    # This subcomponent has `text` with distinguishable properties, the
+                    #  previous subcomponent is plain text, and they can be merged.
+
+                    text = string(subcomponent["text"])
+                    previous_text = string(previous_subcomponent)
+
+                    subcomponent["text"] = previous_text + text
+                    previous_subcomponent = subcomponent
+                    merged = True
+
+        elif isinstance(previous_subcomponent, dict):
+            # This subcomponent is plain text, but the previous one is not.
+
+            if "text" in previous_subcomponent and not is_affected_by_inheriting_from(
+                subcomponent, previous_subcomponent
+            ):
+                text = string(subcomponent)
+                previous_text = string(previous_subcomponent["text"])
+
+                previous_subcomponent["text"] = previous_text + text
+                merged = True
+
+        else:
+            # Both this subcomponent and the previous one are plain text.
+
+            text = string(subcomponent)
+            previous_text = string(previous_subcomponent)
+
+            previous_subcomponent = text + previous_text
+
+        if not merged:
+            yield previous_subcomponent
+            previous_subcomponent = subcomponent
+
+    yield previous_subcomponent

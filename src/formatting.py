@@ -1,5 +1,6 @@
 from collections.abc import Collection
 
+from .string import string
 from .regex import LINE_BREAKS
 from .types import FlatTextComponent, TextComponent, TextComponentFormatting
 
@@ -39,9 +40,9 @@ def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str
 
     if isinstance(component, dict):
         if "text" in component:
-            text = str(component["text"])
+            text = string(component["text"])
     else:
-        text = str(component)
+        text = string(component)
 
     text_is_whitespace = False
 

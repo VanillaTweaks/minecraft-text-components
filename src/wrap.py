@@ -67,7 +67,7 @@ def wrap(component: TextComponent):
                     #  `["a", ["", "b", "c"], "d"]`), since the first item in any list
                     #  returned from this lambda can be appended to the previous item in
                     #  the `split` output.
-                    lambda string: ["", *string],
+                    lambda value: ["", *value],
                 ):
                     # `char` either is empty or has only a single character.
 

@@ -1,4 +1,5 @@
 from ..flat import flat
+from ..string import string
 from ..types import TextComponent, TextComponentFormatting, TextComponentText
 from .get_char_advance import get_char_advance
 
@@ -15,7 +16,7 @@ def get_line_advance(
     advance = 0
 
     if isinstance(component, TextComponentText):
-        for char in str(component):
+        for char in string(component):
             advance += get_char_advance(char, formatting)
 
         return advance

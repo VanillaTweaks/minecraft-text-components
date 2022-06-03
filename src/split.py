@@ -3,6 +3,7 @@ from re import Pattern
 from typing import cast, overload
 
 from .flat import flat
+from .string import string
 from .types import (
     FlatTextComponent,
     TextComponent,
@@ -20,7 +21,7 @@ def split_text(
     sep: Separator = None,
     maxsplit: int = -1,
 ):
-    component = str(component)
+    component = string(component)
 
     if callable(sep):
         split_component = sep(component)
