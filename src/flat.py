@@ -9,8 +9,7 @@ def flat(
     formatting: TextComponentFormatting | None = None,
 ) -> Generator[FlatTextComponent, None, None]:
     """Generates the sequence of `TextComponentText`s and `TextComponentDict`s needed to
-    recursively flatten all arrays and `extra` properties of a text component into one
-    big array.
+    recursively flatten all lists and `extra`s of a text component into one big list.
 
     Never yields `''`. All yielded `dict`s are shallow copies if not new. Doesn't
     transform `with` values at all.
