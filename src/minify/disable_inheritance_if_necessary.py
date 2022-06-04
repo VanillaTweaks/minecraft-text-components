@@ -11,8 +11,10 @@ def disable_inheritance_if_necessary(subcomponents: list[TextComponent]):
     """
 
     formatting_keys = get_formatting_keys(subcomponents[0])
+
     if formatting_keys:
         for subcomponent in subcomponents[1:]:
+
             for flat_subcomponent in flat(subcomponent):
                 if is_affected_by_inheriting(flat_subcomponent, formatting_keys):
                     return ["", *subcomponents]
