@@ -11,7 +11,7 @@ WHITESPACE_AFFECTED_BY_KEYS = FORMATTING_KEYS - WHITESPACE_UNAFFECTED_BY_KEYS
 
 
 def get_formatting(component: TextComponent) -> TextComponentFormatting:
-    """Gets a `TextComponentFormatting` with only the properties of the inputted
+    """Gets a `TextComponentFormatting` with only the properties of the inputted text
     component that can be inherited by other text components.
     """
 
@@ -21,17 +21,32 @@ def get_formatting(component: TextComponent) -> TextComponentFormatting:
     formatting: TextComponentFormatting = {}
 
     if isinstance(component, dict):
-        for key in FORMATTING_KEYS:
-            if key in component:
-                formatting[key] = component[key]
+        for key in component.keys() & FORMATTING_KEYS:
+            formatting[key] = component[key]
 
     return formatting
 
 
-def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str]):
-    """Checks whether inheriting the specified formatting keys would have a
-    distinguishable in-game effect on the specified `FlatTextComponent`.
+def get_formatting_keys(component: TextComponent) -> set[str]:
+    """Gets a set of only the keys of the inputted text component that can be inherited
+    by other text components.
     """
+
+    if isinstance(component, list):
+        return get_formatting_keys(component[0])
+
+    if isinstance(component, dict):
+        return component.keys() & FORMATTING_KEYS
+
+    return set()
+
+
+def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str]):
+    """Checks whether inheriting the specified `TextComponentFormatting` keys would have
+    a distinguishable in-game effect on the specified `FlatTextComponent`.
+    """
+
+    keys = set(keys) & FORMATTING_KEYS
 
     if len(keys) == 0:
         return False
@@ -62,7 +77,7 @@ def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str
 
         if text_is_whitespace:
             # Ignore the keys that don't affect whitespace.
-            keys = set(keys) - WHITESPACE_UNAFFECTED_BY_KEYS
+            keys -= WHITESPACE_UNAFFECTED_BY_KEYS
 
         return any(key not in component for key in keys)
 
@@ -78,4 +93,4 @@ def is_affected_by_inheriting_from(component: FlatTextComponent, parent: TextCom
     would have a distinguishable in-game effect on the specified `FlatTextComponent`.
     """
 
-    return is_affected_by_inheriting(component, get_formatting(parent))
+    return is_affected_by_inheriting(component, get_formatting_keys(parent))
