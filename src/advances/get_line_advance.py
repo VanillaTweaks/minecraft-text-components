@@ -1,5 +1,5 @@
 from ..flat import flat
-from ..jsstr import jsstr
+from ..js_str import js_str
 from ..types import TextComponent, TextComponentFormatting, TextComponentText
 from .get_char_advance import get_char_advance
 
@@ -16,7 +16,7 @@ def get_line_advance(
     advance = 0
 
     if isinstance(component, TextComponentText):
-        for char in jsstr(component):
+        for char in js_str(component):
             advance += get_char_advance(char, formatting)
 
         return advance

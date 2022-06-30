@@ -1,15 +1,15 @@
 from .types import TextComponentText
 
 
-def jsstr(component: TextComponentText) -> str:
+def js_str(component: TextComponentText) -> str:
     """Converts a `TextComponentText` to a `str` similarly to how it would be converted
     to a string in JavaScript.
 
-    >>> jsstr("hello")
+    >>> js_str("hello")
     "hello"
-    >>> jsstr(42)
+    >>> js_str(42)
     "42"
-    >>> jsstr(True)
+    >>> js_str(True)
     "true"
     """
 

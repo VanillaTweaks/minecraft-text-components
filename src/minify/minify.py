@@ -23,7 +23,7 @@ def minify(component: TextComponent) -> TextComponent:
     if len(unfactored_output) == 0:
         return ""
 
-    factored_output = factor_common_properties(unfactored_output)
+    factored_output = factor_common_formatting(unfactored_output)
 
     if len(factored_output) == 1:
         return factored_output[0]
