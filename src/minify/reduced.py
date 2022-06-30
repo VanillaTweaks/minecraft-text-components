@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
 from ..formatting import WHITESPACE_UNAFFECTED_BY_KEYS
-from ..js_str import js_str
+from ..helpers import js_str
 from ..regex import LINE_BREAKS
 from ..types import FlatTextComponent
 

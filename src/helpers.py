@@ -1,3 +1,5 @@
+import json
+
 from .types import TextComponentText
 
 
@@ -17,3 +19,13 @@ def js_str(component: TextComponentText) -> str:
         return str(component).lower()
 
     return str(component)
+
+
+def json_str(value: object):
+    """Gets a minified JSON string of the specified object."""
+
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )

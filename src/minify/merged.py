@@ -5,7 +5,7 @@ from ..formatting import (
     WHITESPACE_AFFECTED_BY_KEYS,
     is_affected_by_inheriting_from,
 )
-from ..js_str import js_str
+from ..helpers import js_str
 from ..types import FlatTextComponent
 
 

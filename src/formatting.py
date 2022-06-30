@@ -1,6 +1,6 @@
 from collections.abc import Collection
 
-from .js_str import js_str
+from .helpers import js_str
 from .regex import LINE_BREAKS
 from .types import FlatTextComponent, TextComponent, TextComponentFormatting
 

@@ -3,7 +3,7 @@ from re import Pattern
 from typing import cast, overload
 
 from .flat import flat
-from .js_str import js_str
+from .helpers import js_str
 from .types import (
     FlatTextComponent,
     TextComponent,
