@@ -4,7 +4,6 @@ from ..formatting import WHITESPACE_UNAFFECTED_BY_KEYS
 from ..jsstr import jsstr
 from ..regex import LINE_BREAKS
 from ..types import FlatTextComponent
-from .minify import minify
 
 
 def reduced(subcomponents: Iterator[FlatTextComponent]):
@@ -13,6 +12,8 @@ def reduced(subcomponents: Iterator[FlatTextComponent]):
 
     ⚠️ Only for use in `minify`. May mutate the inputted subcomponents.
     """
+
+    from .minify import minify
 
     for subcomponent in subcomponents:
         if isinstance(subcomponent, dict):

@@ -1,6 +1,7 @@
 from ..flat import flat
 from ..types import TextComponent
 from .disable_inheritance_if_necessary import disable_inheritance_if_necessary
+from .factor_common_formatting import factor_common_formatting
 from .merged import merged
 from .reduced import reduced
 
