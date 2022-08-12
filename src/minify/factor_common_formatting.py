@@ -1,10 +1,8 @@
-import math
 from dataclasses import dataclass
 from functools import cache, cached_property
 from typing import Final, Iterable, NamedTuple
 
-from formatting import get_formatting
-
+from ..formatting import get_formatting, is_affected_by_inheriting
 from ..helpers import json_str
 from ..types import FlatTextComponent, TextComponent
 
@@ -100,15 +98,15 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             #  be done.
             return FactoredFormattings(parent_formattings, cost=0)
 
-        # The formatting at the start of the subtuple.
-        first_subtuple_formatting = formattings[subtuple_start]
-
         best_cost = None
         # The factoring of the subtuple that results in the best cost.
         best_subtuple_factoring: FactoredFormattings | None = None
         # The factoring of the formattings after the subtuple that results in the best
         #  cost.
         best_remainder_factoring: FactoredFormattings | None = None
+
+        # The formatting at the start of the subtuple.
+        first_subtuple_formatting = formattings[subtuple_start]
 
         def is_cheaper(cost: int):
             return best_cost is None or cost < best_cost
@@ -123,8 +121,30 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 continue
 
             # The set of potential formattings to apply to the subtuple.
-            # TODO: all of the properties of the first node + any subset of the properties found in other nodes (that dont overwrite the properties of the first node, except when they have no effect on the first node)
+            # TODO: all of the properties of the first node + any subset of the properties found in other nodes in the subtuple (that dont overwrite the properties of the first node, except when they have no effect on the first node)
             potential_formattings = {first_subtuple_formatting}
+
+            # TODO: Consider caching the below process.
+
+            potential_formatting_items = set[FormattingItem]()
+            for subtuple_formatting in subtuple:
+                if subtuple_formatting is first_subtuple_formatting:
+                    continue
+
+                for formatting_item in subtuple_formatting:
+                    if is_affected_by_inheriting(
+                        first_subtuple_component, {formatting_item.key}
+                    ):
+                        # This formatting item is inconsistent with the subtuple's first
+                        #  component, so there's no reason to apply it to the subtuple.
+                        #  If an optimal factoring did have a subtuple whose formatting
+                        #  is inconsistent with its first component, then there would
+                        #  need to be an additional inner subtuple covering that first
+                        #  component anyway, in which case the outer subtuple might as
+                        #  well start later instead.
+                        continue
+
+                    potential_formatting_items.add(formatting_item)
 
             for potential_formatting in potential_formattings:
                 child_formatting = potential_formatting - parent_formatting
