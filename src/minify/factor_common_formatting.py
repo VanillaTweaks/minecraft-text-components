@@ -35,11 +35,11 @@ def get_cost(formatting_items: Iterable[FormattingItem]):
     return sum(item.cost for item in formatting_items)
 
 
+FormattingSet = frozenset[FormattingItem]
+
 # A list for which the first element is the parent formatting, and each ellipsis is a
 #  placeholder for a subcomponent inheriting from the formatting.
-FactoredFormattingList = list[
-    frozenset[FormattingItem] | ellipsis | "FactoredFormattingList"
-]
+FactoredFormattingList = list[FormattingSet | ellipsis | "FactoredFormattingList"]
 
 
 class FactoredFormattings(NamedTuple):
@@ -87,8 +87,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # The index in `subcomponents` of the first subcomponent which the `formattings`
         #  apply to.
         subcomponent_index: int,
-        formattings: tuple[frozenset[FormattingItem], ...],
-        parent_formatting: frozenset[FormattingItem],
+        formattings: tuple[FormattingSet, ...],
+        parent_formatting: FormattingSet,
     ) -> FactoredFormattings:
         """Factors a subtuple of the inputted `formattings` and gets its cost."""
 
@@ -132,9 +132,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # The set of potential formattings to apply to the subtuple. Like a power set of
         #  the values in `potential_formatting_items`, but each element contains at most
         #  one of each formatting key.
-        potential_formattings = set[frozenset[FormattingItem]]()
+        potential_formattings = set[FormattingSet]()
         # Formattings with items to be passed to `add_potential_formatting_item`.
-        formattings_with_potential_items = set[frozenset[FormattingItem]]()
+        formattings_with_potential_items = set[FormattingSet]()
 
         @cache
         def add_potential_formatting_item(formatting_item: FormattingItem):
