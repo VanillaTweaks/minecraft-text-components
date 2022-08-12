@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 from functools import cache, cached_property
+from types import EllipsisType
 from typing import Final, Iterable, NamedTuple, cast
 
 from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
@@ -56,7 +57,7 @@ def get_cost(formatting_items: Iterable[FormattingItem]):
 
 # A list for which the first element is the parent formatting, and each ellipsis is a
 #  placeholder for a subcomponent inheriting from the formatting.
-FactoredFormattingList = list[FormattingSet | ellipsis | "FactoredFormattingList"]
+FactoredFormattingList = list["FormattingSet | EllipsisType | FactoredFormattingList"]
 
 
 class FactoredFormattings(NamedTuple):
