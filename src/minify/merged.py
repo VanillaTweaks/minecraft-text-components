@@ -17,7 +17,6 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
 
     try:
         previous_subcomponent = next(subcomponents)
-
     except StopIteration:
         return
 

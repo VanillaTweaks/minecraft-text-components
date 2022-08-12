@@ -3,7 +3,7 @@ from ..types import TextComponent
 from .disable_inheritance_if_necessary import disable_inheritance_if_necessary
 from .factor_common_formatting import factor_common_formatting
 from .merged import merged
-from .reduced import reduced
+from .reduce import reduced
 
 
 def minify(component: TextComponent) -> TextComponent:
@@ -25,8 +25,8 @@ def minify(component: TextComponent) -> TextComponent:
 
     factored_output = factor_common_formatting(unfactored_output)
 
-    if len(factored_output) == 1:
-        return factored_output[0]
+    if not isinstance(factored_output, list):
+        return factored_output
 
     output = disable_inheritance_if_necessary(factored_output)
 

@@ -48,7 +48,7 @@ def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str
 
     keys = set(keys) & FORMATTING_KEYS
 
-    if len(keys) == 0:
+    if not keys:
         return False
 
     text: str | None = None
