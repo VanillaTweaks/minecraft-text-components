@@ -24,7 +24,8 @@ def reduce(component: FlatTextComponent):
 
             if text_is_whitespace:
                 for key in WHITESPACE_UNAFFECTED_BY_KEYS:
-                    del component[key]
+                    if key in component:
+                        del component[key]
 
             # Check if the component's formatting has no effect on its `text`.
             if (

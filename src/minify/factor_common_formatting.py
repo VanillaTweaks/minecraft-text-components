@@ -226,7 +226,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 keys=potential_formatting_items.keys() - {formatting_item.key},
             )
 
-        for subtuple_end in range(subtuple_start + 1, len(formattings)):
+        for subtuple_end in range(subtuple_start + 1, len(formattings) + 1):
             subtuple = formattings[subtuple_start:subtuple_end]
 
             # Since the length of the subtuple starts at 1 and increases by 1 each
@@ -336,9 +336,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
     return get_factored_component(
         factor_and_get_cost(
-            formattings=(
+            formattings=tuple(
                 get_formatting_items(subcomponent) for subcomponent in subcomponents
             ),
             parent_formatting=FormattingSet(),
-        ).value,
+        ).value
     )
