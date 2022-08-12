@@ -316,7 +316,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 flat_subcomponents.append(next(subcomponent_iterator))
                 continue
 
-            subcomponent = get_factored_component(cast(FactoredFormattingList, item))
+            subcomponent = get_factored_component(item)  # type: ignore
 
             if isinstance(subcomponent, list):
                 end_flat_subcomponents()

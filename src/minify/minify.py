@@ -28,6 +28,6 @@ def minify(component: TextComponent) -> TextComponent:
     if not isinstance(factored_output, list):
         return factored_output
 
-    output = disable_inheritance_if_necessary(factored_output)
+    output = disable_inheritance_if_necessary(factored_output)  # type: ignore
 
     return output
