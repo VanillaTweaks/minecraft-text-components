@@ -234,7 +234,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             else:
                 potential_formatting_items[formatting_item.key] = {formatting_item}
 
-            # This formatting inherits from the parent formatting.
+            # Every potential formatting inherits from the parent formatting.
             formatting = set(parent_formatting)
             # If the formatting item would conflict with a parent formatting item, allow
             #  the parent item to be overwritten.
