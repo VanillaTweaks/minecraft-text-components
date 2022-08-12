@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 from functools import cache, cached_property
 from typing import Final, Iterable, NamedTuple, cast
@@ -43,7 +44,7 @@ FactoredFormattingList = list[
 
 class FactoredFormattings(NamedTuple):
     value: FactoredFormattingList
-    cost: int
+    cost: float
 
 
 def remove_dict_formatting(component: TextComponentDict):
@@ -100,8 +101,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         for formatting in formattings:
             # TODO: Change every instance of this condition to be whether the
             #  `parent_formatting` fully covers this `formatting` (based on whether its
-            #  content is whitespace or line breaks (cache this)) rather than whether
-            #  they equal.
+            #  content is whitespace or line breaks (precompute or cache this)) rather
+            #  than whether they equal.
             if formatting == parent_formatting:
                 # Skip this formatting since it's already covered by the parent.
                 subtuple_start += 1
@@ -116,15 +117,11 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             #  be done.
             return FactoredFormattings(parent_formattings, cost=0)
 
-        best_cost = None
-        # The factoring of the subtuple that results in the best cost.
+        best_cost = math.inf
+        # The factoring of the subtuple that yields the best cost.
         best_subtuple_factoring: FactoredFormattings | None = None
-        # The factoring of the formattings after the subtuple that results in the best
-        #  cost.
+        # The factoring of the formattings after the subtuple that yields the best cost.
         best_remainder_factoring: FactoredFormattings | None = None
-
-        def is_cheaper(cost: int):
-            return best_cost is None or cost < best_cost
 
         # The first subcomponent covered by the subtuple.
         first_subtuple_component = subcomponents[subcomponent_index + subtuple_start]
@@ -136,11 +133,22 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         #  the values in `potential_formatting_items`, but each element contains at most
         #  one of each formatting key.
         potential_formattings = set[frozenset[FormattingItem]]()
+        # Formattings with items to be passed to `add_potential_formatting_item`.
+        formattings_with_potential_items = set[frozenset[FormattingItem]]()
 
+        @cache
         def add_potential_formatting_item(formatting_item: FormattingItem):
-            """Adds a formatting item to the `potential_formatting_items` and updates
-            the `potential_formattings` accordingly.
+            """Adds a formatting item to the `potential_formatting_items` if applicable
+            and updates the `potential_formattings` accordingly.
             """
+
+            if is_affected_by_inheriting(
+                first_subtuple_component, {formatting_item.key}
+            ):
+                # The formatting item conflicts with the subtuple's first
+                #  component, so applying it to the subtuple would give its
+                #  first component incorrect formatting.
+                return
 
             if formatting_item.key in potential_formatting_items:
                 potential_formatting_items[formatting_item.key].add(formatting_item)
@@ -182,36 +190,31 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         for subtuple_end in range(subtuple_start + 1, len(formattings)):
             subtuple = formattings[subtuple_start:subtuple_end]
 
+            # Since the length of the subtuple starts at 1 and increases by 1 each
+            #  iteration, every element in the subtuple is `subtuple[-1]` at some point,
+            #  so this adds potential formatting items for everything in the subtuple.
+            formattings_with_potential_items.add(subtuple[-1])
+
             remainder_factoring = factor_and_get_cost(
                 formattings[subtuple_end:], parent_formatting
             )
-            if not is_cheaper(remainder_factoring.cost):
+            if remainder_factoring.cost >= best_cost:
                 continue
 
-            # Since the length of the subtuple starts at 1 and increases by 1 each
-            #  iteration, every element of the subtuple is `subtuple[-1]` at some point,
-            #  so this covers every element in the subtuple.
-            for formatting_item in subtuple[-1]:
-                if is_affected_by_inheriting(
-                    first_subtuple_component, {formatting_item.key}
-                ):
-                    # The formatting item conflicts with the subtuple's first component,
-                    #  so applying it to the subtuple would give its first component
-                    #  incorrect formatting.
-                    continue
+            while formattings_with_potential_items:
+                for formatting_item in formattings_with_potential_items.pop():
+                    add_potential_formatting_item(formatting_item)
 
-                add_potential_formatting_item(formatting_item)
-
-            for potential_formatting in potential_formattings:
-                child_formatting = potential_formatting - parent_formatting
+            for formatting in potential_formattings:
+                child_formatting = formatting - parent_formatting
 
                 cost = get_cost(child_formatting) + remainder_factoring.cost
-                if not is_cheaper(cost):
+                if cost >= best_cost:
                     continue
 
-                subtuple_factoring = factor_and_get_cost(subtuple, potential_formatting)
+                subtuple_factoring = factor_and_get_cost(subtuple, formatting)
                 cost += subtuple_factoring.cost
-                if not is_cheaper(cost):
+                if cost >= best_cost:
                     continue
 
                 best_cost = cost
@@ -219,7 +222,6 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 best_remainder_factoring = remainder_factoring
 
         # The above loop must have ran for at least one iteration.
-        assert best_cost is not None
         assert best_subtuple_factoring is not None
         assert best_remainder_factoring is not None
 
