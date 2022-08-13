@@ -18,7 +18,8 @@ def flat(
     if formatting is None:
         formatting = {}
 
-    formatting |= get_formatting(component)
+    # Be careful not to mutate the original `formatting`.
+    formatting = formatting | get_formatting(component)
 
     if isinstance(component, list):
         if component:
