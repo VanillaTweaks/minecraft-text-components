@@ -133,7 +133,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     ) -> FactoredFormattings:
         """Factors a subtuple of the inputted `formattings` and gets its cost."""
 
-        print(
+        print(  # TODO: Remove this.
             subcomponent_start,
             subcomponent_start + len(formattings),
             set(parent_formatting),
@@ -349,7 +349,13 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 subtuple_factoring = factor_and_get_cost(
                     subtuple, formatting, subcomponent_start + subtuple_start
                 )
+
                 cost += subtuple_factoring.cost
+                if len(subtuple_factoring.value) > 1:
+                    # Add 2 for the cost of the square brackets when the subtuple can't
+                    #  be reduced to just one element.
+                    cost += 2
+
                 if cost >= best_cost:
                     continue
 
