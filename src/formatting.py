@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterable
 
 from .helpers import js_str
 from .regex import LINE_BREAKS
@@ -41,9 +41,10 @@ def get_formatting_keys(component: TextComponent) -> set[str]:
     return set()
 
 
-def is_affected_by_inheriting(component: FlatTextComponent, keys: Collection[str]):
-    """Checks whether inheriting the specified `TextComponentFormatting` keys would have
-    a distinguishable in-game effect on the specified `FlatTextComponent`.
+def is_affected_by_inheriting(component: FlatTextComponent, keys: Iterable[str]):
+    """Checks whether inheriting the specified `TextComponentFormatting` keys from a
+    parent text component would have a distinguishable in-game effect on the specified
+    `FlatTextComponent`.
     """
 
     keys = set(keys) & FORMATTING_KEYS

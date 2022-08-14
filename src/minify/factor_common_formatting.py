@@ -2,16 +2,21 @@ import math
 from dataclasses import dataclass
 from functools import cache, cached_property
 from types import EllipsisType
-from typing import Final, Iterable, NamedTuple, cast
+from typing import Any, Final, Iterable, NamedTuple, cast
 
-from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
+from ..formatting import (
+    FORMATTING_KEYS,
+    get_formatting,
+    get_formatting_keys,
+    is_affected_by_inheriting,
+)
 from ..helpers import json_str
+from ..prevent_inheritance import prevent_inheritance
 from ..types import (
     FlatTextComponent,
     TextComponent,
     TextComponentDict,
     TextComponentFormatting,
-    TextComponentTextDict,
 )
 from .merged import merged
 from .reduce import reduce, reduced
@@ -36,6 +41,15 @@ class FormattingItem:
 
 FormattingSet = frozenset[FormattingItem]
 
+# A list for which the first element is the parent formatting (if there is any), and
+#  each ellipsis is a placeholder for a subcomponent inheriting from the formatting.
+FactoredFormattingList = list["FormattingSet | EllipsisType | FactoredFormattingList"]
+
+
+class FactoredFormattings(NamedTuple):
+    value: FactoredFormattingList
+    cost: float
+
 
 def get_formatting_items(component: TextComponent):
     """Converts a `TextComponent` to a `FormattingSet`."""
@@ -55,16 +69,6 @@ def get_cost(formatting_items: Iterable[FormattingItem]):
     return sum(item.cost for item in formatting_items)
 
 
-# A list for which the first element is the parent formatting, and each ellipsis is a
-#  placeholder for a subcomponent inheriting from the formatting.
-FactoredFormattingList = list["FormattingSet | EllipsisType | FactoredFormattingList"]
-
-
-class FactoredFormattings(NamedTuple):
-    value: FactoredFormattingList
-    cost: float
-
-
 def set_component_formatting(
     component: FlatTextComponent, formatting: TextComponentFormatting
 ):
@@ -80,9 +84,6 @@ def set_component_formatting(
         content = {"text": component}
 
     return cast(TextComponentDict, content | formatting)
-
-
-FactoredTextComponent = FlatTextComponent | list["FactoredTextComponent"]
 
 
 def factor_common_formatting(subcomponents: list[FlatTextComponent]):
@@ -141,7 +142,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         # The formattings which only inherit from the parent and precede the next
         #  subtuple.
-        parent_formattings = FactoredFormattingList()
+        parent_formattings: FactoredFormattingList = []
 
         # The index in `formattings` at which the next subtuple needs to start.
         subtuple_start = 0
@@ -167,15 +168,15 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         # A dict which maps each formatting key to a set of formatting items with that
         #  key to consider applying to the subtuple.
-        potential_formatting_items = dict[str, set[FormattingItem]]()
+        potential_formatting_items: dict[str, set[FormattingItem]] = {}
         # The set of potential formattings to apply to the subtuple. Like a power set of
         #  the values in `potential_formatting_items`, but each element contains at most
         #  one of each formatting key.
-        potential_formattings = set[FormattingSet]()
+        potential_formattings: set[FormattingSet] = set()
         # Formattings with items to be passed to `add_potential_formatting_item`.
-        formattings_with_potential_items = set[FormattingSet]()
+        formattings_with_potential_items: set[FormattingSet] = set()
         # The components corresponding to `formattings_with_potential_items`.
-        components_with_potential_items = list[FlatTextComponent]()
+        components_with_potential_items: list[FlatTextComponent] = []
 
         parent_formatting_items = {item.key: item for item in parent_formatting}
 
@@ -266,7 +267,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             if not formatting_keys:
                 return
 
-            removed_formatting_items = set[FormattingItem]()
+            removed_formatting_items: set[FormattingItem] = set()
             for formatting_key in formatting_keys:
                 removed_formatting_items |= potential_formatting_items.pop(
                     formatting_key
@@ -382,21 +383,17 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
     def get_factored_component(
         factoring: FactoredFormattingList,
-    ) -> FactoredTextComponent:
+    ) -> TextComponent:
         """Converts a `FactoredFormattingList` to a `TextComponent`."""
 
-        formatting = get_component_formatting(cast(FormattingSet, factoring[1]))
-        contents = cast(list[ellipsis | FactoredFormattingList], factoring[1:])
+        formatting: TextComponentFormatting = {}
+        if isinstance(factoring[0], frozenset):
+            formatting = get_component_formatting(cast(FormattingSet, factoring.pop(0)))
 
-        if contents == [...]:
-            return reduce(
-                set_component_formatting(next(subcomponent_iterator), formatting)
-            )
+        contents = cast(list[EllipsisType | FactoredFormattingList], factoring)
+        output: list[TextComponent] = []
 
-        formatting_with_text = cast(TextComponentTextDict, {"text": ""} | formatting)
-        output: list[FactoredTextComponent] = [formatting_with_text]
-
-        flat_subcomponents = list[FlatTextComponent]()
+        flat_subcomponents: list[FlatTextComponent] = []
 
         def end_flat_subcomponents():
             if not flat_subcomponents:
@@ -411,7 +408,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 flat_subcomponents.append(next(subcomponent_iterator))
                 continue
 
-            subcomponent = get_factored_component(item)  # type: ignore
+            subcomponent = get_factored_component(cast(FactoredFormattingList, item))
 
             if isinstance(subcomponent, list):
                 end_flat_subcomponents()
@@ -422,6 +419,52 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             flat_subcomponents.append(subcomponent)
 
         end_flat_subcomponents()
+
+        if formatting:
+            # Check if the output list's first item shouldn't take `formatting`'s items.
+            if (
+                # The algorithm would've put the `formatting` on that list to begin with
+                #  if it were optimal.
+                isinstance(output[0], list)
+                # If taking the `formatting`'s items would affect the component, the
+                #  component shouldn't take them.
+                or is_affected_by_inheriting(
+                    cast(
+                        TextComponentDict,
+                        {
+                            key: value
+                            for key, value in output[0].items()
+                            # Let the `formatting` overwrite any items in `output[0]`.
+                            if key not in formatting
+                        },
+                    )
+                    if isinstance(output[0], dict)
+                    else output[0],
+                    formatting.keys(),
+                )
+            ):
+                # The formatting must be inserted as a new first element instead of
+                #  being applied to the existing one.
+
+                # It's not necessary to call `prevent_inheritance` here because the
+                #  original first element won't be inherited anyway, since we're about
+                #  to insert a new first element that should be inherited instead.
+
+                output.insert(0, cast(TextComponentDict, {"text": ""} | formatting))
+
+            else:
+                # If the first element has formatting the other elements would inherit
+                #  but shouldn't, then we should let `prevent_inheritance` insert an
+                #  empty string to take the `formatting` instead of the first element.
+                output = prevent_inheritance(output)
+
+                if isinstance(output[0], dict):
+                    output[0] |= cast(Any, formatting)
+                else:
+                    output[0] = cast(TextComponentDict, {"text": output[0]})
+
+        else:
+            output = prevent_inheritance(output)
 
         if len(output) == 1:
             return output[0]

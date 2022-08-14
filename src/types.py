@@ -154,6 +154,6 @@ TextComponentDict = (
 
 TextComponent = TextComponentText | TextComponentDict | list["TextComponent"]
 
-# This isn't completely flat, since it still allows for `extra`, but it's as close as we
-#  can practically get.
+# Objects of this type should be completely flat and never have an `extra` key, even
+#  though this type does not (and practically cannot) enforce that.
 FlatTextComponent = TextComponentText | TextComponentDict
