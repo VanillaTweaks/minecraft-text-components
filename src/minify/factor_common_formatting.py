@@ -435,7 +435,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                             key: value
                             for key, value in output[0].items()
                             # Let the `formatting` overwrite any items in `output[0]`.
-                            if key not in formatting
+                            if not (key in formatting and formatting[key] != value)
                         },
                     )
                     if isinstance(output[0], dict)
