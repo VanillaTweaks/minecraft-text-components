@@ -129,11 +129,11 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     ) -> FactoredFormattings:
         """Factors a subtuple of the inputted `formattings` and gets its cost."""
 
-        print(  # TODO: Remove this.
-            subcomponent_start,
-            subcomponent_start + len(formattings),
-            set(parent_formatting),
-        )
+        # print(  # TODO: Remove this.
+        #     subcomponent_start,
+        #     subcomponent_start + len(formattings),
+        #     set(parent_formatting),
+        # )
 
         # The formattings which only inherit from the parent and precede the next
         #  subtuple.
@@ -312,12 +312,13 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 subtuple_components_start:subtuple_components_end
             ]
 
-            # Since the length of the subtuple starts at 1 and increases by 1 each
-            #  iteration, every element in the subtuple is `subtuple[-1]` at some point,
-            #  so this covers everything in the subtuple.
-            formattings_with_potential_items.add(subtuple[-1])
-            # The same applies here.
-            components_with_potential_items.append(subtuple_components[-1])
+            if len(subtuple) == 1:  # TODO: Finalize this.
+                # Since the length of the subtuple starts at 1 and increases by 1 each
+                #  iteration, every element in the subtuple is `subtuple[-1]` at some point,
+                #  so this covers everything in the subtuple.
+                formattings_with_potential_items.add(subtuple[-1])
+                # The same applies here.
+                components_with_potential_items.append(subtuple_components[-1])
 
             remainder_factoring = factor_and_get_cost(
                 formattings[subtuple_end:],
@@ -434,14 +435,14 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 #  component shouldn't take them.
                 or (
                     is_affected_by_inheriting(
-                    cast(
-                        TextComponentDict,
-                        {
-                            key: value
-                            for key, value in output[0].items()
+                        cast(
+                            TextComponentDict,
+                            {
+                                key: value
+                                for key, value in output[0].items()
                                 # Let the `formatting` overwrite any items.
                                 if key not in formatting
-                        },
+                            },
                         ),
                         # Exclude the `formatting` keys `output[0]` doesn't have, since
                         #  those ones are specifically intended to affect the component.

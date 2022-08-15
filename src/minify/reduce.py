@@ -58,4 +58,4 @@ def reduced(subcomponents: Iterable[FlatTextComponent]):
             # Reduce empty strings to nothing by not yielding anything.
             continue
 
-        yield subcomponent
+        yield reduced_subcomponent
