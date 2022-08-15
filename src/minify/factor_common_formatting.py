@@ -4,12 +4,7 @@ from functools import cache, cached_property
 from types import EllipsisType
 from typing import Any, Final, Iterable, NamedTuple, cast
 
-from ..formatting import (
-    FORMATTING_KEYS,
-    get_formatting,
-    get_formatting_keys,
-    is_affected_by_inheriting,
-)
+from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
 from ..helpers import json_str
 from ..prevent_inheritance import prevent_inheritance
 from ..types import (
@@ -19,7 +14,7 @@ from ..types import (
     TextComponentFormatting,
 )
 from .merged import merged
-from .reduce import reduce, reduced
+from .reduce import reduced
 
 
 @dataclass(frozen=True)
@@ -405,7 +400,16 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         for item in contents:
             if item is ...:
-                flat_subcomponents.append(next(subcomponent_iterator))
+                subcomponent = next(subcomponent_iterator)
+
+                if isinstance(subcomponent, dict):
+                    # Remove the items that will be inherited from the `formatting`.
+                    subcomponent = cast(
+                        TextComponentDict,
+                        dict(subcomponent.items() - formatting.items()),
+                    )
+
+                flat_subcomponents.append(subcomponent)
                 continue
 
             subcomponent = get_factored_component(cast(FactoredFormattingList, item))
@@ -428,19 +432,23 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 isinstance(output[0], list)
                 # If taking the `formatting`'s items would affect the component, the
                 #  component shouldn't take them.
-                or is_affected_by_inheriting(
+                or (
+                    is_affected_by_inheriting(
                     cast(
                         TextComponentDict,
                         {
                             key: value
                             for key, value in output[0].items()
-                            # Let the `formatting` overwrite any items in `output[0]`.
-                            if not (key in formatting and formatting[key] != value)
+                                # Let the `formatting` overwrite any items.
+                                if key not in formatting
                         },
+                        ),
+                        # Exclude the `formatting` keys `output[0]` doesn't have, since
+                        #  those ones are specifically intended to affect the component.
+                        formatting.keys() & output[0].items(),
                     )
                     if isinstance(output[0], dict)
-                    else output[0],
-                    formatting.keys(),
+                    else is_affected_by_inheriting(output[0], formatting.keys())
                 )
             ):
                 # The formatting must be inserted as a new first element instead of
