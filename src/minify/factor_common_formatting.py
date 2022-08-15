@@ -102,10 +102,10 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     ]
     """
 
-    formattings: Final = tuple(
+    formattings: Final = [
         get_formatting_set(get_formatting(subcomponent))
         for subcomponent in subcomponents
-    )
+    ]
 
     @cache
     def parent_covers_subcomponent(
@@ -131,40 +131,40 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     def factor_and_get_cost(
         *,
         parent: FormattingSet,
-        # The index to start the slice of `subcomponents` to factor.
+        # The index to start the range of `subcomponents` to factor.
         start: int,
-        # The index to end the slice of `subcomponents` to factor.
+        # The index to end the range of `subcomponents` to factor.
         end: int,
     ) -> FactoredFormattings:
-        """Factors a subtuple of the inputted `formattings` and gets its cost."""
+        """Factors a range of the inputted `formattings` and gets its cost."""
 
         # The formattings which only inherit from the parent and precede the next
-        #  subtuple.
+        #  sublist.
         formattings_covered_by_parent: FactoredFormattingList = []
 
-        # The index in `subcomponents` at which the next subtuple needs to start.
-        subtuple_start = start
+        # The index in `subcomponents` at which the next sublist needs to start.
+        sublist_start = start
         for i in range(start, end):
             if parent_covers_subcomponent(parent, i):
                 # Skip this subcomponent since it's already covered by the parent.
-                subtuple_start += 1
+                sublist_start += 1
                 formattings_covered_by_parent.append(...)
             else:
                 # This formatting isn't covered by the parent, so this is where the next
-                #  subtuple needs to start in order for everything to be covered.
+                #  sublist needs to start in order for everything to be covered.
                 break
 
-        if subtuple_start == end:
+        if sublist_start == end:
             # All the formattings are the same as the parent, so no factoring needs to
             #  be done.
             return FactoredFormattings(value=formattings_covered_by_parent, cost=0)
 
         best_cost = math.inf
-        best_subtuple_formatting: FormattingSet | None = None
-        best_subtuple_factoring: FactoredFormattings | None = None
+        best_sublist_formatting: FormattingSet | None = None
+        best_sublist_factoring: FactoredFormattings | None = None
         best_remainder_factoring: FactoredFormattings | None = None
 
-        # The formattings to consider applying to the subtuple.
+        # The formattings to consider applying to the sublist.
         potential_formattings: set[FormattingSet] | None = None
         # A mapping from each formatting key to the set of formatting items which are in
         #  `potential_formattings` with that key.
@@ -187,15 +187,16 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
                 potential_formattings = set()
 
+                first_sublist_formatting = formattings[sublist_start]
                 parent_component_formatting = get_component_formatting(parent)
 
-                # A power set of the items in the first subtuple element, excluding the
+                # A power set of the items in the first sublist element, excluding the
                 #  empty set.
                 combinations = itertools.chain.from_iterable(
                     # Exclude formatting items already in the parent, since making a new
-                    #  subtuple for an item the parent already has would be pointless.
-                    itertools.combinations(subtuple[0] - parent, length)
-                    for length in range(1, len(subtuple[0]) + 1)
+                    #  sublist for an item the parent already has would be pointless.
+                    itertools.combinations(first_sublist_formatting - parent, length)
+                    for length in range(1, len(first_sublist_formatting) + 1)
                 )
 
                 for combination in combinations:
@@ -214,18 +215,18 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     )
 
                 # Note: `potential_formattings` can't be empty at this point, because
-                #  `subtuple[0] - parent` (what generates the `combinations`) can't be
-                #  empty either. If it were, then that would place `subtuple[0]` in the
-                #  `formattings_covered_by_parent`, not in the `subtuple`.
+                #  `first_sublist_formatting - parent` (what generates `combinations`)
+                #  can't be empty either. If it were, then `first_sublist_formatting`
+                #  would be in the `formattings_covered_by_parent`, not in the sublist.
 
-            # Remove any potential formattings that conflict with the subtuple's new
+            # Remove any potential formattings that conflict with the sublist's new
             #  components in `potentially_conflicting_components`.
 
             keys_to_remove = {
                 formatting_key
                 for formatting_key in potential_formatting_items.keys()
                 # A parent formatting key can never conflict with a component in the
-                #  subtuple, so we can check that first as a shortcut.
+                #  sublist, so we can check that first as a shortcut.
                 if formatting_key not in parent_keys
                 and any(
                     is_affected_by_inheriting(component, {formatting_key})
@@ -247,45 +248,48 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
             potentially_conflicting_components.clear()
 
-        for subtuple_end in range(subtuple_start + 1, end + 1):
-            subtuple = formattings[subtuple_start:subtuple_end]
-            subtuple_components = subcomponents[subtuple_start:subtuple_end]
+        for sublist_end in range(sublist_start + 1, end + 1):
+            sublist_length = sublist_end - sublist_start
+            sublist_components = subcomponents[sublist_start:sublist_end]
 
-            # Add each subtuple component to the `potentially_conflicting_components`,
+            # Add each sublist component to the `potentially_conflicting_components`,
             #  excluding the first since the potential formattings are taken from the
             #  first component and thus cannot conflict with it.
-            if len(subtuple) != 1:
-                potentially_conflicting_components.append(subtuple_components[-1])
+            if sublist_length != 1:
+                potentially_conflicting_components.append(sublist_components[-1])
 
             remainder_factoring = factor_and_get_cost(
-                parent=parent, start=subtuple_end, end=end
+                parent=parent, start=sublist_end, end=end
             )
             if remainder_factoring.cost >= best_cost:
                 continue
 
-            if len(subtuple) == 1:
-                # If the subtuple only has one element, it's unnecessary to update and
+            if sublist_length == 1:
+                # If the sublist only has one element, it's unnecessary to update and
                 #  try all the `potential_formattings`.
-                formattings_to_try = {subtuple[0]}
+                formattings_to_try = {formattings[sublist_start]}
             else:
+                # TODO: Consider optimizing by only adding to `potential_formattings`
+                #  what there are multiple instances of, and make
+                #  `update_potential_formattings` more modular.
                 update_potential_formattings()
                 assert potential_formattings is not None
                 formattings_to_try = potential_formattings
 
             for formatting in formattings_to_try:
-                subtuple_formatting = formatting - parent
+                sublist_formatting = formatting - parent
 
-                cost = get_cost(subtuple_formatting) + remainder_factoring.cost
+                cost = get_cost(sublist_formatting) + remainder_factoring.cost
                 if cost >= best_cost:
                     continue
 
-                subtuple_factoring = factor_and_get_cost(
-                    parent=formatting, start=subtuple_start, end=subtuple_end
+                sublist_factoring = factor_and_get_cost(
+                    parent=formatting, start=sublist_start, end=sublist_end
                 )
 
-                cost += subtuple_factoring.cost
-                if len(subtuple_factoring.value) > 1:
-                    # Add 2 for the cost of the square brackets when the subtuple can't
+                cost += sublist_factoring.cost
+                if len(sublist_factoring.value) > 1:
+                    # Add 2 for the cost of the square brackets when the sublist can't
                     #  be reduced to just one element.
                     cost += 2
 
@@ -293,19 +297,19 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     continue
 
                 best_cost = cost
-                best_subtuple_formatting = subtuple_formatting
-                best_subtuple_factoring = subtuple_factoring
+                best_sublist_formatting = sublist_formatting
+                best_sublist_factoring = sublist_factoring
                 best_remainder_factoring = remainder_factoring
 
         # The above loop must have ran for at least one iteration.
-        assert best_subtuple_formatting is not None
-        assert best_subtuple_factoring is not None
+        assert best_sublist_formatting is not None
+        assert best_sublist_factoring is not None
         assert best_remainder_factoring is not None
 
         return FactoredFormattings(
             value=[
                 *formattings_covered_by_parent,
-                [best_subtuple_formatting, *best_subtuple_factoring.value],
+                [best_sublist_formatting, *best_sublist_factoring.value],
                 *best_remainder_factoring.value,
             ],
             cost=best_cost,
