@@ -175,52 +175,50 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         parent_keys = {item.key for item in parent}
 
-        def update_potential_formattings():
-            """Updates the `potential_formattings` and clears the
-            `potentially_conflicting_components`.
+        def compute_potential_formattings():
+            nonlocal potential_formattings
+
+            potential_formattings = set()
+
+            first_sublist_formatting = formattings[sublist_start]
+            parent_component_formatting = get_component_formatting(parent)
+
+            # A power set of the items in the first sublist element, excluding the empty
+            #  set.
+            combinations = itertools.chain.from_iterable(
+                # Exclude formatting items already in the parent, since making a new
+                #  sublist for an item the parent already has would be pointless.
+                itertools.combinations(first_sublist_formatting - parent, length)
+                for length in range(1, len(first_sublist_formatting) + 1)
+            )
+
+            for combination in combinations:
+                for item in combination:
+                    if item.key in potential_formatting_items:
+                        potential_formatting_items[item.key].add(item)
+                    else:
+                        potential_formatting_items[item.key] = {item}
+
+                potential_formattings.add(
+                    get_formatting_set(
+                        # Every potential formatting should inherit from the parent.
+                        parent_component_formatting
+                        | get_component_formatting(combination)
+                    )
+                )
+
+            # Note: `potential_formattings` can't be empty at this point, because
+            #  `first_sublist_formatting - parent` (what generates the `combinations`)
+            #  can't be empty either. If it were, then `first_sublist_formatting` would
+            #  be in the `formattings_covered_by_parent`, not in the sublist.
+
+        def remove_conflicting_potential_formattings():
+            """Removes any `potential_formattings` and `potential_formatting_items` that
+            conflict with the new components in `potential_conflicting_components`, then
+            clears the `potential_conflicting_components`.
             """
 
             nonlocal potential_formattings
-
-            if potential_formattings is None:
-                # Compute the initial `potential_formattings`.
-
-                potential_formattings = set()
-
-                first_sublist_formatting = formattings[sublist_start]
-                parent_component_formatting = get_component_formatting(parent)
-
-                # A power set of the items in the first sublist element, excluding the
-                #  empty set.
-                combinations = itertools.chain.from_iterable(
-                    # Exclude formatting items already in the parent, since making a new
-                    #  sublist for an item the parent already has would be pointless.
-                    itertools.combinations(first_sublist_formatting - parent, length)
-                    for length in range(1, len(first_sublist_formatting) + 1)
-                )
-
-                for combination in combinations:
-                    for item in combination:
-                        if item.key in potential_formatting_items:
-                            potential_formatting_items[item.key].add(item)
-                        else:
-                            potential_formatting_items[item.key] = {item}
-
-                    potential_formattings.add(
-                        get_formatting_set(
-                            # Every potential formatting should inherit from the parent.
-                            parent_component_formatting
-                            | get_component_formatting(combination)
-                        )
-                    )
-
-                # Note: `potential_formattings` can't be empty at this point, because
-                #  `first_sublist_formatting - parent` (what generates `combinations`)
-                #  can't be empty either. If it were, then `first_sublist_formatting`
-                #  would be in the `formattings_covered_by_parent`, not in the sublist.
-
-            # Remove any potential formattings that conflict with the sublist's new
-            #  components in `potentially_conflicting_components`.
 
             keys_to_remove = {
                 formatting_key
@@ -236,10 +234,10 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
             if keys_to_remove:
                 items_to_remove: set[FormattingItem] = set()
-
                 for key_to_remove in keys_to_remove:
                     items_to_remove |= potential_formatting_items.pop(key_to_remove)
 
+                assert potential_formattings is not None
                 potential_formattings = {
                     formatting
                     for formatting in potential_formattings
@@ -247,6 +245,16 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 }
 
             potentially_conflicting_components.clear()
+
+        def update_potential_formattings():
+            """Updates the `potential_formattings` and clears the
+            `potentially_conflicting_components`.
+            """
+
+            if potential_formattings is None:
+                compute_potential_formattings()
+
+            remove_conflicting_potential_formattings()
 
         for sublist_end in range(sublist_start + 1, end + 1):
             sublist_length = sublist_end - sublist_start
@@ -269,12 +277,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 #  try all the `potential_formattings`.
                 formattings_to_try = {formattings[sublist_start]}
             else:
-                # TODO: Consider optimizing by only adding to `potential_formattings`
-                #  what there are multiple instances of, and make
-                #  `update_potential_formattings` more modular.
                 update_potential_formattings()
-                assert potential_formattings is not None
-                formattings_to_try = potential_formattings
+                formattings_to_try = cast(set[FormattingSet], potential_formattings)
 
             for formatting in formattings_to_try:
                 sublist_formatting = formatting - parent
@@ -301,7 +305,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 best_sublist_factoring = sublist_factoring
                 best_remainder_factoring = remainder_factoring
 
-        # The above loop must have ran for at least one iteration.
+        # The above loops must have ran for at least one iteration.
         assert best_sublist_formatting is not None
         assert best_sublist_factoring is not None
         assert best_remainder_factoring is not None
