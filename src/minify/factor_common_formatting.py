@@ -101,60 +101,61 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     ]
     """
 
+    formattings = tuple(
+        get_formatting_items(subcomponent) for subcomponent in subcomponents
+    )
+
     @cache
-    def parent_formatting_covers(
-        parent_formatting: FormattingSet,
-        formatting: FormattingSet,
-        subcomponent_index: int,
+    def parent_covers(
+        parent: FormattingSet,
+        # The index of the subcomponent to check.
+        i: int,
     ):
         """Checks whether the parent formatting can substitute the subcomponent's
         formatting without affecting the subcomponent.
         """
 
-        return parent_formatting == formatting or (
-            parent_formatting > formatting
+        formatting = formattings[i]
+
+        return parent == formatting or (
+            parent > formatting
             and not is_affected_by_inheriting(
-                subcomponents[subcomponent_index],
-                {formatting_item.key for formatting_item in parent_formatting},
+                subcomponents[i],
+                {formatting_item.key for formatting_item in parent},
             )
         )
 
     @cache
     def factor_and_get_cost(
-        formattings: tuple[FormattingSet, ...],
-        parent_formatting: FormattingSet,
-        # The index in `subcomponents` of the first subcomponent which the `formattings`
-        #  correspond to.
-        subcomponent_start: int = 0,
+        *,
+        parent: FormattingSet,
+        # The index to start the slice of `subcomponents` to factor.
+        start: int,
+        # The index to end the slice of `subcomponents` to factor.
+        end: int,
     ) -> FactoredFormattings:
         """Factors a subtuple of the inputted `formattings` and gets its cost."""
 
-        # print(  # TODO: Remove this.
-        #     subcomponent_start,
-        #     subcomponent_start + len(formattings),
-        #     set(parent_formatting),
-        # )
-
         # The formattings which only inherit from the parent and precede the next
         #  subtuple.
-        parent_formattings: FactoredFormattingList = []
+        parents: FactoredFormattingList = []
 
-        # The index in `formattings` at which the next subtuple needs to start.
-        subtuple_start = 0
-        for i, formatting in enumerate(formattings, subcomponent_start):
-            if parent_formatting_covers(parent_formatting, formatting, i):
+        # The index in `subcomponents` at which the next subtuple needs to start.
+        subtuple_start = start
+        for i in range(start, end):
+            if parent_covers(parent, i):
                 # Skip this formatting since it's already covered by the parent.
                 subtuple_start += 1
-                parent_formattings.append(...)
+                parents.append(...)
             else:
                 # This formatting isn't covered by the parent, so this is where the next
                 #  subtuple needs to start in order for everything to be covered.
                 break
 
-        if subtuple_start == len(formattings):
+        if subtuple_start == end:
             # All the formattings are the same as the parent, so no factoring needs to
             #  be done.
-            return FactoredFormattings(value=parent_formattings, cost=0)
+            return FactoredFormattings(value=parents, cost=0)
 
         best_cost = math.inf
         best_subtuple_formatting: FormattingSet | None = None
@@ -164,16 +165,16 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # A dict which maps each formatting key to a set of formatting items with that
         #  key to consider applying to the subtuple.
         potential_formatting_items: dict[str, set[FormattingItem]] = {}
-        # The set of potential formattings to apply to the subtuple. Like a power set of
-        #  the values in `potential_formatting_items`, but each element contains at most
-        #  one of each formatting key.
+        # The formattings to consider applying to the subtuple. Like a power set of the
+        #  values in `potential_formatting_items`, but each element contains at most one
+        #  of each formatting key.
         potential_formattings: set[FormattingSet] = set()
         # Formattings with items to be passed to `add_potential_formatting_item`.
         formattings_with_potential_items: set[FormattingSet] = set()
         # The components corresponding to `formattings_with_potential_items`.
         components_with_potential_items: list[FlatTextComponent] = []
 
-        parent_formatting_items = {item.key: item for item in parent_formatting}
+        parent_items = {item.key: item for item in parent}
 
         def remove_potential_formatting_keys(formatting_keys: Iterable[str]):
             """Removes all formatting items with the specified keys from the
@@ -219,9 +220,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             formatting_without_conflict = formatting
             # If new formatting items would conflict with a parent formatting item,
             #  allow the parent item to be overwritten.
-            if key in parent_formatting_items:
+            if key in parent_items:
                 formatting_without_conflict = formatting.copy()
-                formatting_without_conflict.remove(parent_formatting_items[key])
+                formatting_without_conflict.remove(parent_items[key])
 
             # Add every possible formatting item with key `key`.
             for formatting_item in potential_formatting_items[key]:
@@ -240,14 +241,14 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             and updates the `potential_formattings` accordingly.
             """
 
-            if formatting_item in parent_formatting:
+            if formatting_item in parent:
                 # The formatting item is already in the parent formatting, so making a
                 #  new subtuple for the same item would be pointless.
                 return
 
             # A parent formatting key can never conflict with a component in the
             #  subtuple, so we can check that first as a shortcut.
-            if formatting_item.key not in parent_formatting_items and any(
+            if formatting_item.key not in parent_items and any(
                 is_affected_by_inheriting(subcomponent, {formatting_item.key})
                 for subcomponent in subtuple_components
             ):
@@ -261,11 +262,11 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 potential_formatting_items[formatting_item.key] = {formatting_item}
 
             # Every potential formatting inherits from the parent formatting.
-            formatting = set(parent_formatting)
+            formatting = set(parent)
             # If the formatting item would conflict with a parent formatting item, allow
             #  the parent item to be overwritten.
-            if formatting_item.key in parent_formatting_items:
-                formatting.remove(parent_formatting_items[formatting_item.key])
+            if formatting_item.key in parent_items:
+                formatting.remove(parent_items[formatting_item.key])
 
             formatting.add(formatting_item)
 
@@ -287,7 +288,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 for formatting_key in potential_formatting_items.keys()
                 # A parent formatting key can never conflict with a component in the
                 #  subtuple, so we can check that first as a shortcut.
-                if formatting_key not in parent_formatting_items
+                if formatting_key not in parent_items
                 and any(
                     is_affected_by_inheriting(component, {formatting_key})
                     for component in components_with_potential_items
@@ -304,13 +305,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
             formattings_with_potential_items.clear()
 
-        for subtuple_end in range(subtuple_start + 1, len(formattings) + 1):
+        for subtuple_end in range(subtuple_start + 1, end + 1):
             subtuple = formattings[subtuple_start:subtuple_end]
-            subtuple_components_start = subcomponent_start + subtuple_start
-            subtuple_components_end = subcomponent_start + subtuple_end
-            subtuple_components = subcomponents[
-                subtuple_components_start:subtuple_components_end
-            ]
+            subtuple_components = subcomponents[subtuple_start:subtuple_end]
 
             if len(subtuple) == 1:  # TODO: Finalize this.
                 # Since the length of the subtuple starts at 1 and increases by 1 each
@@ -321,9 +318,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 components_with_potential_items.append(subtuple_components[-1])
 
             remainder_factoring = factor_and_get_cost(
-                formattings[subtuple_end:],
-                parent_formatting,
-                subcomponent_start + subtuple_end,
+                parent=parent, start=subtuple_end, end=end
             )
             if remainder_factoring.cost >= best_cost:
                 continue
@@ -337,14 +332,14 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formattings_to_try = potential_formattings
 
             for formatting in formattings_to_try:
-                subtuple_formatting = formatting - parent_formatting
+                subtuple_formatting = formatting - parent
 
                 cost = get_cost(subtuple_formatting) + remainder_factoring.cost
                 if cost >= best_cost:
                     continue
 
                 subtuple_factoring = factor_and_get_cost(
-                    subtuple, formatting, subcomponent_start + subtuple_start
+                    parent=formatting, start=subtuple_start, end=subtuple_end
                 )
 
                 cost += subtuple_factoring.cost
@@ -368,7 +363,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         return FactoredFormattings(
             value=[
-                *parent_formattings,
+                *parents,
                 [best_subtuple_formatting, *best_subtuple_factoring.value],
                 *best_remainder_factoring.value,
             ],
@@ -488,9 +483,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
     return get_factored_component(
         factor_and_get_cost(
-            formattings=tuple(
-                get_formatting_items(subcomponent) for subcomponent in subcomponents
-            ),
-            parent_formatting=FormattingSet(),
+            parent=FormattingSet(),
+            start=0,
+            end=len(subcomponents),
         ).value
     )
