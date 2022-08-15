@@ -428,13 +428,11 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         if formatting:
             # Check if the output list's first item shouldn't take `formatting`'s items.
             if (
-                # The algorithm would've put the `formatting` on that list to begin with
-                #  if it were optimal.
-                isinstance(output[0], list)
-                # If taking the `formatting`'s items would affect the component, the
-                #  component shouldn't take them.
-                or (
-                    is_affected_by_inheriting(
+                (
+                    # If taking the `formatting`'s items would affect the component, the
+                    #  component shouldn't take them.
+                    isinstance(output[0], dict)
+                    and is_affected_by_inheriting(
                         cast(
                             TextComponentDict,
                             {
@@ -448,9 +446,10 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                         #  those ones are specifically intended to affect the component.
                         formatting.keys() & output[0].items(),
                     )
-                    if isinstance(output[0], dict)
-                    else is_affected_by_inheriting(output[0], formatting.keys())
                 )
+                # The algorithm would've put the `formatting` on that list to begin with
+                #  if it were optimal.
+                or isinstance(output[0], list)
             ):
                 # The formatting must be inserted as a new first element instead of
                 #  being applied to the existing one.
@@ -470,7 +469,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 if isinstance(output[0], dict):
                     output[0] |= cast(Any, formatting)
                 else:
-                    output[0] = cast(TextComponentDict, {"text": output[0]})
+                    output[0] = cast(
+                        TextComponentDict, {"text": output[0]} | formatting
+                    )
 
         else:
             output = prevent_inheritance(output)
