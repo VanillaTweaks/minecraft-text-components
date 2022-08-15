@@ -175,6 +175,29 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         parent_formatting_items = {item.key: item for item in parent_formatting}
 
+        def remove_potential_formatting_keys(formatting_keys: Iterable[str]):
+            """Removes all formatting items with the specified keys from the
+            `potential_formatting_items` and updates the `potential_formattings`
+            accordingly.
+            """
+
+            nonlocal potential_formattings
+
+            if not formatting_keys:
+                return
+
+            removed_formatting_items: set[FormattingItem] = set()
+            for formatting_key in formatting_keys:
+                removed_formatting_items |= potential_formatting_items.pop(
+                    formatting_key
+                )
+
+            potential_formattings = {
+                formatting
+                for formatting in potential_formattings
+                if not formatting & removed_formatting_items
+            }
+
         def add_potential_formattings(
             formatting: set[FormattingItem],
             # The remaining formatting keys to add potential formattings for.
@@ -250,29 +273,6 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formatting,
                 keys=potential_formatting_items.keys() - {formatting_item.key},
             )
-
-        def remove_potential_formatting_keys(formatting_keys: Iterable[str]):
-            """Removes all formatting items with the specified keys from the
-            `potential_formatting_items` and updates the `potential_formattings`
-            accordingly.
-            """
-
-            nonlocal potential_formattings
-
-            if not formatting_keys:
-                return
-
-            removed_formatting_items: set[FormattingItem] = set()
-            for formatting_key in formatting_keys:
-                removed_formatting_items |= potential_formatting_items.pop(
-                    formatting_key
-                )
-
-            potential_formattings = {
-                formatting
-                for formatting in potential_formattings
-                if not formatting & removed_formatting_items
-            }
 
         def update_potential_formattings():
             """Updates the `potential_formattings` based on
@@ -391,6 +391,20 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         flat_subcomponents: list[FlatTextComponent] = []
 
+        def append_flat_subcomponent(subcomponent: FlatTextComponent):
+            if isinstance(subcomponent, dict):
+                subcomponent = cast(
+                    TextComponentDict,
+                    {
+                        key: value
+                        for key, value in subcomponent.items()
+                        # Remove the items that will be inherited from the `formatting`.
+                        if formatting.get(key) != value
+                    },
+                )
+
+            flat_subcomponents.append(subcomponent)
+
         def end_flat_subcomponents():
             if not flat_subcomponents:
                 return
@@ -401,16 +415,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         for item in contents:
             if item is ...:
-                subcomponent = next(subcomponent_iterator)
-
-                if isinstance(subcomponent, dict):
-                    # Remove the items that will be inherited from the `formatting`.
-                    subcomponent = cast(
-                        TextComponentDict,
-                        dict(subcomponent.items() - formatting.items()),
-                    )
-
-                flat_subcomponents.append(subcomponent)
+                append_flat_subcomponent(next(subcomponent_iterator))
                 continue
 
             subcomponent = get_factored_component(cast(FactoredFormattingList, item))
@@ -421,7 +426,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 output.append(subcomponent)
                 continue
 
-            flat_subcomponents.append(subcomponent)
+            append_flat_subcomponent(subcomponent)
 
         end_flat_subcomponents()
 
