@@ -1,3 +1,4 @@
+import itertools
 import math
 from dataclasses import dataclass
 from functools import cache, cached_property
@@ -46,18 +47,18 @@ class FactoredFormattings(NamedTuple):
     cost: float
 
 
-def get_formatting_items(component: TextComponent):
-    """Converts a `TextComponent` to a `FormattingSet`."""
+def get_formatting_set(formatting: TextComponentFormatting):
+    """Converts a `TextComponentFormatting` to a `FormattingSet`."""
 
     return FormattingSet(
-        FormattingItem(key, value) for key, value in get_formatting(component).items()
+        FormattingItem(key, value) for key, value in formatting.items()
     )
 
 
-def get_component_formatting(formatting: FormattingSet):
-    """Converts a `FormattingSet` to `TextComponentFormatting`."""
+def get_component_formatting(items: Iterable[FormattingItem]):
+    """Converts `FormattingItem`s to `TextComponentFormatting`."""
 
-    return cast(TextComponentFormatting, {item.key: item.value for item in formatting})
+    return cast(TextComponentFormatting, {item.key: item.value for item in items})
 
 
 def get_cost(formatting_items: Iterable[FormattingItem]):
@@ -101,12 +102,13 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
     ]
     """
 
-    formattings = tuple(
-        get_formatting_items(subcomponent) for subcomponent in subcomponents
+    formattings: Final = tuple(
+        get_formatting_set(get_formatting(subcomponent))
+        for subcomponent in subcomponents
     )
 
     @cache
-    def parent_covers(
+    def parent_covers_subcomponent(
         parent: FormattingSet,
         # The index of the subcomponent to check.
         i: int,
@@ -138,15 +140,15 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         # The formattings which only inherit from the parent and precede the next
         #  subtuple.
-        parents: FactoredFormattingList = []
+        formattings_covered_by_parent: FactoredFormattingList = []
 
         # The index in `subcomponents` at which the next subtuple needs to start.
         subtuple_start = start
         for i in range(start, end):
-            if parent_covers(parent, i):
-                # Skip this formatting since it's already covered by the parent.
+            if parent_covers_subcomponent(parent, i):
+                # Skip this subcomponent since it's already covered by the parent.
                 subtuple_start += 1
-                parents.append(...)
+                formattings_covered_by_parent.append(...)
             else:
                 # This formatting isn't covered by the parent, so this is where the next
                 #  subtuple needs to start in order for everything to be covered.
@@ -155,167 +157,105 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         if subtuple_start == end:
             # All the formattings are the same as the parent, so no factoring needs to
             #  be done.
-            return FactoredFormattings(value=parents, cost=0)
+            return FactoredFormattings(value=formattings_covered_by_parent, cost=0)
 
         best_cost = math.inf
         best_subtuple_formatting: FormattingSet | None = None
         best_subtuple_factoring: FactoredFormattings | None = None
         best_remainder_factoring: FactoredFormattings | None = None
 
-        # A dict which maps each formatting key to a set of formatting items with that
-        #  key to consider applying to the subtuple.
+        # The formattings to consider applying to the subtuple.
+        potential_formattings: set[FormattingSet] | None = None
+        # A mapping from each formatting key to the set of formatting items which are in
+        #  `potential_formattings` with that key.
         potential_formatting_items: dict[str, set[FormattingItem]] = {}
-        # The formattings to consider applying to the subtuple. Like a power set of the
-        #  values in `potential_formatting_items`, but each element contains at most one
-        #  of each formatting key.
-        potential_formattings: set[FormattingSet] = set()
-        # Formattings with items to be passed to `add_potential_formatting_item`.
-        formattings_with_potential_items: set[FormattingSet] = set()
-        # The components corresponding to `formattings_with_potential_items`.
-        components_with_potential_items: list[FlatTextComponent] = []
+        # Components that might conflict with the `potential_formattings` and haven't
+        #  been checked by `update_potential_formattings` yet.
+        potentially_conflicting_components: list[FlatTextComponent] = []
 
-        parent_items = {item.key: item for item in parent}
+        parent_keys = {item.key for item in parent}
 
-        def remove_potential_formatting_keys(formatting_keys: Iterable[str]):
-            """Removes all formatting items with the specified keys from the
-            `potential_formatting_items` and updates the `potential_formattings`
-            accordingly.
+        def update_potential_formattings():
+            """Updates the `potential_formattings` and clears the
+            `potentially_conflicting_components`.
             """
 
             nonlocal potential_formattings
 
-            if not formatting_keys:
-                return
+            if potential_formattings is None:
+                # Compute the initial `potential_formattings`.
 
-            removed_formatting_items: set[FormattingItem] = set()
-            for formatting_key in formatting_keys:
-                removed_formatting_items |= potential_formatting_items.pop(
-                    formatting_key
+                potential_formattings = set()
+
+                parent_component_formatting = get_component_formatting(parent)
+
+                # A power set of the items in the first subtuple element, excluding the
+                #  empty set.
+                combinations = itertools.chain.from_iterable(
+                    # Exclude formatting items already in the parent, since making a new
+                    #  subtuple for an item the parent already has would be pointless.
+                    itertools.combinations(subtuple[0] - parent, length)
+                    for length in range(1, len(subtuple[0]) + 1)
                 )
 
-            potential_formattings = {
-                formatting
-                for formatting in potential_formattings
-                if not formatting & removed_formatting_items
-            }
+                for combination in combinations:
+                    for item in combination:
+                        if item.key in potential_formatting_items:
+                            potential_formatting_items[item.key].add(item)
+                        else:
+                            potential_formatting_items[item.key] = {item}
 
-        def add_potential_formattings(
-            formatting: set[FormattingItem],
-            # The remaining formatting keys to add potential formattings for.
-            keys: set[str],
-        ):
-            """Joins the specified `formatting` with every possible combination of the
-            `potential_formatting_items` which have the specified `keys`, adding each
-            joined combination to the `potential_formattings`.
-            """
+                    potential_formattings.add(
+                        get_formatting_set(
+                            # Every potential formatting should inherit from the parent.
+                            parent_component_formatting
+                            | get_component_formatting(combination)
+                        )
+                    )
 
-            if not keys:
-                # The `formatting` does not need any more keys and is ready to be added
-                #  to the `potential_formattings`.
-                potential_formattings.add(FormattingSet(formatting))
-                return
-
-            key = keys.pop()
-
-            formatting_without_conflict = formatting
-            # If new formatting items would conflict with a parent formatting item,
-            #  allow the parent item to be overwritten.
-            if key in parent_items:
-                formatting_without_conflict = formatting.copy()
-                formatting_without_conflict.remove(parent_items[key])
-
-            # Add every possible formatting item with key `key`.
-            for formatting_item in potential_formatting_items[key]:
-                add_potential_formattings(
-                    {*formatting_without_conflict, formatting_item}, keys.copy()
-                )
-
-            # Add the possibility for no formatting item with key `key`.
-            # There's no need to use copies for `formatting` and `keys` this time since
-            #  this is the last time they'll be used in this iteration.
-            add_potential_formattings(formatting, keys)
-
-        @cache
-        def add_potential_formatting_item(formatting_item: FormattingItem):
-            """Adds a formatting item to the `potential_formatting_items` if applicable
-            and updates the `potential_formattings` accordingly.
-            """
-
-            if formatting_item in parent:
-                # The formatting item is already in the parent formatting, so making a
-                #  new subtuple for the same item would be pointless.
-                return
-
-            # A parent formatting key can never conflict with a component in the
-            #  subtuple, so we can check that first as a shortcut.
-            if formatting_item.key not in parent_items and any(
-                is_affected_by_inheriting(subcomponent, {formatting_item.key})
-                for subcomponent in subtuple_components
-            ):
-                # The formatting item conflicts with a component in the subtuple, so
-                #  applying it to the subtuple would result in incorrect formatting.
-                return
-
-            if formatting_item.key in potential_formatting_items:
-                potential_formatting_items[formatting_item.key].add(formatting_item)
-            else:
-                potential_formatting_items[formatting_item.key] = {formatting_item}
-
-            # Every potential formatting inherits from the parent formatting.
-            formatting = set(parent)
-            # If the formatting item would conflict with a parent formatting item, allow
-            #  the parent item to be overwritten.
-            if formatting_item.key in parent_items:
-                formatting.remove(parent_items[formatting_item.key])
-
-            formatting.add(formatting_item)
-
-            add_potential_formattings(
-                formatting,
-                keys=potential_formatting_items.keys() - {formatting_item.key},
-            )
-
-        def update_potential_formattings():
-            """Updates the `potential_formattings` based on
-            `components_with_potential_items` and `formattings_with_potential_items`.
-            """
+                # Note: `potential_formattings` can't be empty at this point, because
+                #  `subtuple[0] - parent` (what generates the `combinations`) can't be
+                #  empty either. If it were, then that would place `subtuple[0]` in the
+                #  `formattings_covered_by_parent`, not in the `subtuple`.
 
             # Remove any potential formattings that conflict with the subtuple's new
-            #  components.
+            #  components in `potentially_conflicting_components`.
 
-            remove_potential_formatting_keys(
+            keys_to_remove = {
                 formatting_key
                 for formatting_key in potential_formatting_items.keys()
                 # A parent formatting key can never conflict with a component in the
                 #  subtuple, so we can check that first as a shortcut.
-                if formatting_key not in parent_items
+                if formatting_key not in parent_keys
                 and any(
                     is_affected_by_inheriting(component, {formatting_key})
-                    for component in components_with_potential_items
+                    for component in potentially_conflicting_components
                 )
-            )
+            }
 
-            components_with_potential_items.clear()
+            if keys_to_remove:
+                items_to_remove: set[FormattingItem] = set()
 
-            # Add potential formattings present in the subtuple's new components.
+                for key_to_remove in keys_to_remove:
+                    items_to_remove |= potential_formatting_items.pop(key_to_remove)
 
-            for formatting in formattings_with_potential_items:
-                for formatting_item in formatting:
-                    add_potential_formatting_item(formatting_item)
+                potential_formattings = {
+                    formatting
+                    for formatting in potential_formattings
+                    if not formatting & items_to_remove
+                }
 
-            formattings_with_potential_items.clear()
+            potentially_conflicting_components.clear()
 
         for subtuple_end in range(subtuple_start + 1, end + 1):
             subtuple = formattings[subtuple_start:subtuple_end]
             subtuple_components = subcomponents[subtuple_start:subtuple_end]
 
-            if len(subtuple) == 1:  # TODO: Finalize this.
-                # Since the length of the subtuple starts at 1 and increases by 1 each
-                #  iteration, every element in the subtuple is `subtuple[-1]` at some point,
-                #  so this covers everything in the subtuple.
-                formattings_with_potential_items.add(subtuple[-1])
-                # The same applies here.
-                components_with_potential_items.append(subtuple_components[-1])
+            # Add each subtuple component to the `potentially_conflicting_components`,
+            #  excluding the first since the potential formattings are taken from the
+            #  first component and thus cannot conflict with it.
+            if len(subtuple) != 1:
+                potentially_conflicting_components.append(subtuple_components[-1])
 
             remainder_factoring = factor_and_get_cost(
                 parent=parent, start=subtuple_end, end=end
@@ -324,11 +264,12 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 continue
 
             if len(subtuple) == 1:
-                # If the subtuple only has one element, it's unnecessary to compute and
+                # If the subtuple only has one element, it's unnecessary to update and
                 #  try all the `potential_formattings`.
                 formattings_to_try = {subtuple[0]}
             else:
                 update_potential_formattings()
+                assert potential_formattings is not None
                 formattings_to_try = potential_formattings
 
             for formatting in formattings_to_try:
@@ -363,7 +304,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         return FactoredFormattings(
             value=[
-                *parents,
+                *formattings_covered_by_parent,
                 [best_subtuple_formatting, *best_subtuple_factoring.value],
                 *best_remainder_factoring.value,
             ],
