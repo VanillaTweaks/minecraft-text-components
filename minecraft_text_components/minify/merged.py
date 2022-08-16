@@ -96,7 +96,8 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
             text = js_str(subcomponent)
             previous_text = js_str(previous_subcomponent)
 
-            previous_subcomponent = text + previous_text
+            previous_subcomponent = previous_text + text
+            merged = True
 
         if not merged:
             yield previous_subcomponent
