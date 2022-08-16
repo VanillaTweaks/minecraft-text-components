@@ -1,9 +1,10 @@
 import itertools
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cache, cached_property
 from types import EllipsisType
-from typing import Any, Final, Iterable, NamedTuple, cast
+from typing import Any, Final, NamedTuple, cast
 
 from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
 from ..helpers import json_str
