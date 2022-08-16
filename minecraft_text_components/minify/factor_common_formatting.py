@@ -279,7 +279,13 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formattings_to_try = {formattings[sublist_start]}
             else:
                 update_potential_formattings()
-                formattings_to_try = cast(set[FormattingSet], potential_formattings)
+
+                if not potential_formattings:
+                    # There are no more potential formattings compatible with the
+                    #  sublist's components.
+                    break
+
+                formattings_to_try = potential_formattings
 
             for formatting in formattings_to_try:
                 sublist_formatting = formatting - parent
