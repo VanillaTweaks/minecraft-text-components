@@ -1,3 +1,3 @@
 # minecraft-text-components
 
-A library for manipulating Minecraft's raw JSON text components
+A Python library for manipulating Minecraft's raw JSON text components

@@ -1,6 +1,6 @@
 import json
 from functools import cache
-from pathlib import Path
+from importlib import resources
 
 from ..types import TextComponentFormatting
 
@@ -17,10 +17,8 @@ INVALID_CHAR_ADVANCE = 8.0
 
 @cache
 def get_advances(filename: str) -> dict[str, int]:
-    path = Path(__file__).parent / f"../../data/{filename}.json"
-
-    with open(path, encoding="utf-8") as file:
-        return json.load(file)
+    path = resources.files("minecraft_text_components") / f"resources/{filename}.json"
+    return json.loads(path.read_text("utf8"))
 
 
 def get_char_advance(

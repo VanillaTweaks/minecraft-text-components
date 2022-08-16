@@ -1,6 +1,6 @@
 import math
 
-from .advances.get_char_advance import get_char_advance
+from .advances import get_char_advance
 from .types import TextComponent
 
 SPACE_ADVANCE = int(get_char_advance(" "))

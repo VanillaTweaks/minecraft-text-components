@@ -2,10 +2,10 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-from .advances.get_line_advance import get_line_advance
+from .advances import get_line_advance
 from .container import container
 from .join import join
-from .minify.minify import minify
+from .minify import minify
 from .split import split
 from .types import TextComponent
 from .whitespace import whitespace

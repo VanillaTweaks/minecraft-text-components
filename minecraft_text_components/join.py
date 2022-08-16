@@ -1,4 +1,4 @@
-from .minify.minify import minify
+from .minify import minify
 from .types import TextComponent
 
 

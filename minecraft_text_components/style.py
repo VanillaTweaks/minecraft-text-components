@@ -1,6 +1,6 @@
 from typing_extensions import Unpack
 
-from .minify.minify import minify
+from .minify import minify
 from .types import TextComponent, TextComponentFormatting
 
 

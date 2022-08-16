@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from .advances.get_line_advance import get_line_advance
+from .advances import get_line_advance
 from .container import container
 from .join import join
 from .split import split

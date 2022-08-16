@@ -1,4 +1,4 @@
-from .advances.get_advance import get_advance
+from .advances import get_advance
 from .container import container
 from .pad_each_line import pad_each_line
 from .types import TextComponent

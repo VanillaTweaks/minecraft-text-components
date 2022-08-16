@@ -1,5 +1,5 @@
-from .advances.get_advance import get_advance
-from .advances.get_line_advance import get_line_advance
+from .advances import get_advance
+from .advances import get_line_advance
 from .container import container
 from .overlap import overlap
 from .pad_each_line import pad_each_line
