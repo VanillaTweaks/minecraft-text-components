@@ -170,16 +170,13 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # A mapping from each formatting key to the set of formatting items which are in
         #  `potential_formattings` with that key.
         potential_formatting_items: dict[str, set[FormattingItem]] = {}
-        # Components that might conflict with the `potential_formattings` and haven't
-        #  been checked by `update_potential_formattings` yet.
-        potentially_conflicting_components: list[FlatTextComponent] = []
 
         parent_keys = {item.key for item in parent}
 
-        def compute_potential_formattings():
-            nonlocal potential_formattings
+        def get_potential_formattings():
+            """Gets the initial value for `potential_formattings`."""
 
-            potential_formattings = set()
+            potential_formattings: set[FormattingSet] = set()
 
             first_sublist_formatting = formattings[sublist_start]
             parent_component_formatting = get_component_formatting(parent)
@@ -213,23 +210,31 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             #  can't be empty either. If it were, then `first_sublist_formatting` would
             #  be in the `formattings_covered_by_parent`, not in the sublist.
 
-        def remove_conflicting_potential_formattings():
-            """Removes any `potential_formattings` and `potential_formatting_items` that
-            conflict with the new components in `potential_conflicting_components`, then
-            clears the `potential_conflicting_components`.
-            """
+            return potential_formattings
+
+        def update_potential_formattings(
+            # A new component in the sublist that might conflict with the
+            #  `potential_formattings`.
+            potentially_conflicting_component: FlatTextComponent,
+        ):
+            """Updates the `potential_formattings` and `potential_formatting_items`."""
 
             nonlocal potential_formattings
+
+            if potential_formattings is None:
+                potential_formattings = get_potential_formattings()
+
+            # Remove any `potential_formattings` and `potential_formatting_items` that
+            #  conflict with the `potentially_conflicting_component`.
 
             keys_to_remove = {
                 formatting_key
                 for formatting_key in potential_formatting_items.keys()
-                # A parent formatting key can never conflict with a component in the
-                #  sublist, so we can check that first as a shortcut.
+                # It's impossible for a parent formatting key to conflict with a
+                #  component in the sublist, so we can check that first as a shortcut.
                 if formatting_key not in parent_keys
-                and any(
-                    is_affected_by_inheriting(component, {formatting_key})
-                    for component in potentially_conflicting_components
+                and is_affected_by_inheriting(
+                    potentially_conflicting_component, {formatting_key}
                 )
             }
 
@@ -245,47 +250,30 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     if not formatting & items_to_remove
                 }
 
-            potentially_conflicting_components.clear()
-
-        def update_potential_formattings():
-            """Updates the `potential_formattings` and clears the
-            `potentially_conflicting_components`.
-            """
-
-            if potential_formattings is None:
-                compute_potential_formattings()
-
-            remove_conflicting_potential_formattings()
-
         for sublist_end in range(sublist_start + 1, end + 1):
             sublist_length = sublist_end - sublist_start
-            sublist_components = subcomponents[sublist_start:sublist_end]
-
-            # Add each sublist component to the `potentially_conflicting_components`,
-            #  excluding the first since the potential formattings are taken from the
-            #  first component and thus cannot conflict with it.
-            if sublist_length != 1:
-                potentially_conflicting_components.append(sublist_components[-1])
-
-            remainder_factoring = factor_and_get_cost(
-                parent=parent, start=sublist_end, end=end
-            )
-            if remainder_factoring.cost >= best_cost:
-                continue
 
             if sublist_length == 1:
                 # If the sublist only has one element, it's unnecessary to update and
                 #  try all the `potential_formattings`.
                 formattings_to_try = {formattings[sublist_start]}
             else:
-                update_potential_formattings()
+                update_potential_formattings(
+                    potentially_conflicting_component=subcomponents[sublist_end - 1]
+                )
 
                 if not potential_formattings:
-                    # There are no more potential formattings compatible with the
-                    #  sublist's components.
+                    # There are no more potential formattings that don't conflict with
+                    #  any of the sublist's components.
                     break
 
                 formattings_to_try = potential_formattings
+
+            remainder_factoring = factor_and_get_cost(
+                parent=parent, start=sublist_end, end=end
+            )
+            if remainder_factoring.cost >= best_cost:
+                continue
 
             for formatting in formattings_to_try:
                 sublist_formatting = formatting - parent
