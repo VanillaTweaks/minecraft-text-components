@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cache, cached_property
 from types import EllipsisType
-from typing import Any, Final, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast
 
 from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
 from ..helpers import json_str
@@ -173,7 +173,20 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
         parent_keys = {item.key for item in parent}
 
-        def get_potential_formattings():
+        def formatting_key_affects_component(key: str, component: FlatTextComponent):
+            """Checks whether a component in the sublist is affected by inheriting an
+            item with the specified key. May be faster than `is_affected_by_inheriting`.
+            """
+
+            # A parent formatting key also can't possibly conflict with a
+            #  sublist component, so we can check that first as a shortcut.
+            return key not in parent_keys and is_affected_by_inheriting(
+                component, {key}
+            )
+
+        def get_potential_formattings(
+            potentially_conflicting_component: FlatTextComponent,
+        ):
             """Gets the initial value for `potential_formattings`."""
 
             potential_formattings: set[FormattingSet] = set()
@@ -181,12 +194,27 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             first_sublist_formatting = formattings[sublist_start]
             parent_component_formatting = get_component_formatting(parent)
 
-            # A power set of the items in the first sublist element, excluding the empty
-            #  set.
+            # The formatting items to generate `combinations` from.
+            potential_items = (
+                item
+                for item in first_sublist_formatting
+                if not (
+                    # Exclude formatting items in the parent, since it's pointless to
+                    #  make a new sublist for an item the parent already has.
+                    item in parent
+                    # Exclude items that conflict with the new sublist component.
+                    or formatting_key_affects_component(
+                        item.key, potentially_conflicting_component
+                    )
+                )
+            )
+
+            # A power set of the non-conflicting items in the first sublist element,
+            #  excluding the empty set.
             combinations = itertools.chain.from_iterable(
                 # Exclude formatting items in the parent, since it's pointless to make a
                 #  new sublist for an item the parent already has.
-                itertools.combinations(first_sublist_formatting - parent, length)
+                itertools.combinations(potential_items, length)
                 for length in range(1, len(first_sublist_formatting) + 1)
             )
 
@@ -222,33 +250,33 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             nonlocal potential_formattings
 
             if potential_formattings is None:
-                potential_formattings = get_potential_formattings()
-
-            # Remove any `potential_formattings` and `potential_formatting_items` that
-            #  conflict with the `potentially_conflicting_component`.
-
-            keys_to_remove = {
-                formatting_key
-                for formatting_key in potential_formatting_items.keys()
-                # It's impossible for a parent formatting key to conflict with a
-                #  component in the sublist, so we can check that first as a shortcut.
-                if formatting_key not in parent_keys
-                and is_affected_by_inheriting(
-                    potentially_conflicting_component, {formatting_key}
+                potential_formattings = get_potential_formattings(
+                    potentially_conflicting_component
                 )
-            }
 
-            if keys_to_remove:
-                items_to_remove: set[FormattingItem] = set()
-                for key_to_remove in keys_to_remove:
-                    items_to_remove |= potential_formatting_items.pop(key_to_remove)
+            else:
+                # Remove any `potential_formattings` and `potential_formatting_items`
+                #  that conflict with the `potentially_conflicting_component`.
 
-                assert potential_formattings is not None
-                potential_formattings = {
-                    formatting
-                    for formatting in potential_formattings
-                    if not formatting & items_to_remove
+                keys_to_remove = {
+                    key
+                    for key in potential_formatting_items.keys()
+                    if formatting_key_affects_component(
+                        key, potentially_conflicting_component
+                    )
                 }
+
+                if keys_to_remove:
+                    items_to_remove: set[FormattingItem] = set()
+                    for key_to_remove in keys_to_remove:
+                        items_to_remove |= potential_formatting_items.pop(key_to_remove)
+
+                    assert potential_formattings is not None
+                    potential_formattings = {
+                        formatting
+                        for formatting in potential_formattings
+                        if not formatting & items_to_remove
+                    }
 
         for sublist_end in range(sublist_start + 1, end + 1):
             sublist_length = sublist_end - sublist_start
@@ -300,10 +328,11 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 best_sublist_factoring = sublist_factoring
                 best_remainder_factoring = remainder_factoring
 
-        # The above loops must have ran for at least one iteration.
-        assert best_sublist_formatting is not None
-        assert best_sublist_factoring is not None
-        assert best_remainder_factoring is not None
+        if TYPE_CHECKING:
+            # The above loops must have ran for at least one iteration.
+            assert best_sublist_formatting is not None
+            assert best_sublist_factoring is not None
+            assert best_remainder_factoring is not None
 
         return FactoredFormattings(
             value=[
