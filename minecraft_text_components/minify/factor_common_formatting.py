@@ -184,8 +184,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             # A power set of the items in the first sublist element, excluding the empty
             #  set.
             combinations = itertools.chain.from_iterable(
-                # Exclude formatting items already in the parent, since making a new
-                #  sublist for an item the parent already has would be pointless.
+                # Exclude formatting items in the parent, since it's pointless to make a
+                #  new sublist for an item the parent already has.
                 itertools.combinations(first_sublist_formatting - parent, length)
                 for length in range(1, len(first_sublist_formatting) + 1)
             )
