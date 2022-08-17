@@ -33,6 +33,7 @@ Pillow = "^9.1.0"
 
 [tool.pyright]
 typeCheckingMode = "strict"
+reportImportCycles = false
 
 [tool.isort]
 profile = "black"
