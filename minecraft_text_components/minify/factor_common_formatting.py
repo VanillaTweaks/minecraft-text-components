@@ -26,7 +26,8 @@ class FormattingItem:
 
     @cached_property
     def _json(self):
-        return f",{json_str(self.key)}:{json_str(self.value)}"
+        # This assumes `json_str(self.key) == f'"{self.key}"'`.
+        return f',"{self.key}":{json_str(self.value)}'
 
     @cached_property
     def cost(self):
@@ -124,7 +125,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             parent > formatting
             and not is_affected_by_inheriting(
                 subcomponents[i],
-                {formatting_item.key for formatting_item in parent},
+                (formatting_item.key for formatting_item in parent),
             )
         )
 
