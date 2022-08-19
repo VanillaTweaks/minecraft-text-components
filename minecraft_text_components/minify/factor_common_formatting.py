@@ -194,7 +194,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             parent_component_formatting = get_component_formatting(parent)
 
             # The formatting items to generate `combinations` from.
-            potential_items = (
+            potential_items = {
                 item
                 for item in first_sublist_formatting
                 if not (
@@ -206,7 +206,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                         item.key, potentially_conflicting_component
                     )
                 )
-            )
+            }
 
             # A power set of the non-conflicting items in the first sublist element,
             #  excluding the empty set.
@@ -214,7 +214,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 # Exclude formatting items in the parent, since it's pointless to make a
                 #  new sublist for an item the parent already has.
                 itertools.combinations(potential_items, length)
-                for length in range(1, len(first_sublist_formatting) + 1)
+                for length in range(1, len(potential_items) + 1)
             )
 
             for combination in combinations:
@@ -308,6 +308,12 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 cost = get_cost(sublist_formatting) + remainder_factoring.cost
                 if cost >= best_cost:
                     continue
+
+                # if sublist_length > 1 and not any(
+                #     new_parent & formatting
+                #     for formatting in formattings[sublist_start + 1 : sublist_end]
+                # ):
+                #     continue
 
                 sublist_factoring = factor_and_get_cost(
                     new_parent, sublist_start, sublist_end
