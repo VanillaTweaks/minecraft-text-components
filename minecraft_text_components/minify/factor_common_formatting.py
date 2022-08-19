@@ -93,7 +93,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
     ⚠️ Only for use in `minify`. May mutate the inputted subcomponents.
 
-    >>> minify(
+    >>> factor_common_formatting(
     >>>     [
     >>>         {"text": "a", "color": "red"},
     >>>         {"text": "b", "color": "green"},
