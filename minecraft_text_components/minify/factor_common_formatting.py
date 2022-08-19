@@ -109,7 +109,6 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         for subcomponent in subcomponents
     ]
 
-    @cache
     def parent_covers_subcomponent(
         parent: FormattingSet,
         # The index of the subcomponent to check.
