@@ -130,7 +130,6 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
     @cache
     def factor_and_get_cost(
-        *,
         parent: FormattingSet,
         # The index to start the range of `subcomponents` to factor.
         start: int,
@@ -298,20 +297,20 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formattings_to_try = potential_formattings
 
             remainder_factoring = factor_and_get_cost(
-                parent=parent, start=sublist_end, end=end
+                parent, start=sublist_end, end=end
             )
             if remainder_factoring.cost >= best_cost:
                 continue
 
-            for formatting in formattings_to_try:
-                sublist_formatting = formatting - parent
+            for new_parent in formattings_to_try:
+                sublist_formatting = new_parent - parent
 
                 cost = get_cost(sublist_formatting) + remainder_factoring.cost
                 if cost >= best_cost:
                     continue
 
                 sublist_factoring = factor_and_get_cost(
-                    parent=formatting, start=sublist_start, end=sublist_end
+                    new_parent, sublist_start, sublist_end
                 )
 
                 cost += sublist_factoring.cost
