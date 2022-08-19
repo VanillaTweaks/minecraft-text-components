@@ -309,12 +309,6 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 if cost >= best_cost:
                     continue
 
-                # if sublist_length > 1 and not any(
-                #     new_parent & formatting
-                #     for formatting in formattings[sublist_start + 1 : sublist_end]
-                # ):
-                #     continue
-
                 sublist_factoring = factor_and_get_cost(
                     new_parent, sublist_start, sublist_end
                 )
