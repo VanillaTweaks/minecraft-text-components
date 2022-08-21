@@ -170,8 +170,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # The formattings to consider applying to the sublist.
         potential_formattings: set[FormattingSet] = set()
         # A mapping from each formatting key to the set of formatting items which are in
-        #  `potential_formattings` with that key.
-        potential_formatting_items: dict[str, set[FormattingItem]] = {}
+        #  `potential_formattings` with that key. Excludes keys without any items.
+        potential_items_by_key: dict[str, set[FormattingItem]] = {}
 
         parent_keys = {item.key for item in parent}
 
@@ -224,10 +224,10 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                         for item in combination:
                             combination_keys.add(item.key)
 
-                            if item.key in potential_formatting_items:
-                                potential_formatting_items[item.key].add(item)
+                            if item.key in potential_items_by_key:
+                                potential_items_by_key[item.key].add(item)
                             else:
-                                potential_formatting_items[item.key] = {item}
+                                potential_items_by_key[item.key] = {item}
 
                         potential_formatting = {
                             item
@@ -241,12 +241,12 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
                 return potential_formattings
 
-            # Remove any `potential_formattings` and `potential_formatting_items` that
+            # Remove any `potential_formattings` and `potential_items_by_key` that
             #  conflict with the `potentially_conflicting_component`.
 
             keys_to_remove = {
                 key
-                for key in potential_formatting_items.keys()
+                for key in potential_items_by_key.keys()
                 if formatting_key_affects_component(
                     key, potentially_conflicting_component
                 )
@@ -255,7 +255,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             if keys_to_remove:
                 items_to_remove: set[FormattingItem] = set()
                 for key_to_remove in keys_to_remove:
-                    items_to_remove |= potential_formatting_items.pop(key_to_remove)
+                    items_to_remove |= potential_items_by_key.pop(key_to_remove)
 
                 return {
                     formatting
