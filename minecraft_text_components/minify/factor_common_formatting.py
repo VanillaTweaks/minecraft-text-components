@@ -189,7 +189,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         def get_potential_formattings(
             # A new component in the sublist that might conflict with the
             #  `potential_formattings`.
-            potentially_conflicting_component: FlatTextComponent,
+            new_sublist_component: FlatTextComponent,
         ):
             """Gets the updated `potential_formattings`."""
 
@@ -212,7 +212,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     and any(item in formatting for formatting in non_first_formattings)
                     # Exclude items that conflict with the new sublist component.
                     and not formatting_key_affects_component(
-                        item.key, potentially_conflicting_component
+                        item.key, new_sublist_component
                     )
                 }
 
@@ -242,14 +242,12 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 return potential_formattings
 
             # Remove any `potential_formattings` and `potential_items_by_key` that
-            #  conflict with the `potentially_conflicting_component`.
+            #  conflict with the `new_sublist_component`.
 
             keys_to_remove = {
                 key
                 for key in potential_items_by_key.keys()
-                if formatting_key_affects_component(
-                    key, potentially_conflicting_component
-                )
+                if formatting_key_affects_component(key, new_sublist_component)
             }
 
             if keys_to_remove:
@@ -274,7 +272,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formattings_to_try = {formattings[sublist_start]}
             else:
                 potential_formattings = get_potential_formattings(
-                    potentially_conflicting_component=subcomponents[sublist_end - 1]
+                    new_sublist_component=subcomponents[sublist_end - 1]
                 )
 
                 if not potential_formattings:
