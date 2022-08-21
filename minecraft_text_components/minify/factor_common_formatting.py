@@ -1,6 +1,3 @@
-# IMPORTANT: This algorithm is very sensitive and sometimes very slow. Don't make
-#  changes you aren't thoroughly sure about the correctness and performance of.
-
 import itertools
 import math
 from collections.abc import Iterable
@@ -270,6 +267,17 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     # There are no more potential formattings that don't conflict with
                     #  any of the sublist's components.
                     break
+
+                last_sublist_formatting = formattings[sublist_end - 1]
+                if not any(
+                    formatting
+                    for formatting in potential_formattings
+                    if formatting <= last_sublist_formatting
+                ):
+                    # The last sublist component wouldn't benefit from these factorings,
+                    #  so an optimal sublist range could just as well exclude this
+                    #  component from the end.
+                    continue
 
                 formattings_to_try = potential_formattings
 
