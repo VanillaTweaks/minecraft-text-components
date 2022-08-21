@@ -167,7 +167,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         best_sublist_factoring: FactoredFormattings | None = None
         best_remainder_factoring: FactoredFormattings | None = None
 
-        # The formattings to consider applying to the sublist.
+        # The formattings to consider ever applying to a sublist.
         potential_formattings: set[FormattingSet] = set()
         # A mapping from each formatting key to the set of formatting items which are in
         #  `potential_formattings` with that key. Excludes keys without any items.
@@ -186,64 +186,61 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 component, {key}
             )
 
-        def get_potential_formattings(
-            # A new component in the sublist that might conflict with the
-            #  `potential_formattings`.
-            new_sublist_component: FlatTextComponent,
-        ):
-            """Gets the updated `potential_formattings`."""
+        def initialize_potential_formattings():
+            first_sublist_formatting = formattings[sublist_start]
+            new_sublist_component = subcomponents[sublist_end - 1]
+            # All formattings but the first that have a chance of being in the sublist.
+            non_first_formattings = formattings[sublist_start + 1 : end]
 
+            # The formatting items to consider factoring.
+            potential_items = {
+                item
+                for item in first_sublist_formatting
+                # Exclude items in the parent, since it's pointless to make a new
+                #  sublist for an item the parent already has.
+                if item not in parent
+                # Exclude items that can only be found once in a sublist.
+                and any(item in formatting for formatting in non_first_formattings)
+                # Exclude items that conflict with the new sublist component.
+                and not formatting_key_affects_component(
+                    item.key, new_sublist_component
+                )
+            }
+
+            for length in range(1, len(potential_items) + 1):
+                combinations = itertools.combinations(potential_items, length)
+                for combination in combinations:
+                    combination_keys: set[str] = set()
+
+                    for item in combination:
+                        combination_keys.add(item.key)
+
+                        if item.key in potential_items_by_key:
+                            potential_items_by_key[item.key].add(item)
+                        else:
+                            potential_items_by_key[item.key] = {item}
+
+                    potential_formatting = {
+                        item
+                        # Every potential formatting should inherit from the parent.
+                        for item in parent
+                        # Exclude items that should be overwritten by the `update`.
+                        if item.key not in combination_keys
+                    }
+                    potential_formatting.update(combination)
+                    potential_formatting = FormattingSet(potential_formatting)
+
+                    potential_formattings.add(potential_formatting)
+
+        def update_potential_formattings():
             if not potential_formattings:
-                # Initialize `potential_formattings`.
-
-                first_sublist_formatting = formattings[sublist_start]
-                # All formattings but the first that have a chance of being in the
-                #  sublist.
-                non_first_formattings = formattings[sublist_start + 1 : end]
-
-                # The formatting items to consider factoring.
-                potential_items = {
-                    item
-                    for item in first_sublist_formatting
-                    # Exclude items in the parent, since it's pointless to make a new
-                    #  sublist for an item the parent already has.
-                    if item not in parent
-                    # Exclude items that can only be found once in the sublist.
-                    and any(item in formatting for formatting in non_first_formattings)
-                    # Exclude items that conflict with the new sublist component.
-                    and not formatting_key_affects_component(
-                        item.key, new_sublist_component
-                    )
-                }
-
-                for length in range(1, len(potential_items) + 1):
-                    combinations = itertools.combinations(potential_items, length)
-                    for combination in combinations:
-                        combination_keys: set[str] = set()
-
-                        for item in combination:
-                            combination_keys.add(item.key)
-
-                            if item.key in potential_items_by_key:
-                                potential_items_by_key[item.key].add(item)
-                            else:
-                                potential_items_by_key[item.key] = {item}
-
-                        potential_formatting = {
-                            item
-                            # Every potential formatting should inherit from the parent.
-                            for item in parent
-                            # Exclude items that will be overwritten.
-                            if item.key not in combination_keys
-                        }
-                        potential_formatting.update(combination)
-                        potential_formattings.add(FormattingSet(potential_formatting))
-
-                return potential_formattings
+                initialize_potential_formattings()
+                return
 
             # Remove any `potential_formattings` and `potential_items_by_key` that
-            #  conflict with the `new_sublist_component`.
+            #  conflict with the new sublist component.
 
+            new_sublist_component = subcomponents[sublist_end - 1]
             keys_to_remove = {
                 key
                 for key in potential_items_by_key.keys()
@@ -255,13 +252,9 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 for key_to_remove in keys_to_remove:
                     items_to_remove |= potential_items_by_key.pop(key_to_remove)
 
-                return {
-                    formatting
-                    for formatting in potential_formattings
-                    if not formatting & items_to_remove
-                }
-
-            return potential_formattings
+                for formatting in potential_formattings.copy():
+                    if formatting & items_to_remove:
+                        potential_formattings.remove(formatting)
 
         for sublist_end in range(sublist_start + 1, end + 1):
             sublist_length = sublist_end - sublist_start
@@ -271,9 +264,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 #  try all the `potential_formattings`.
                 formattings_to_try = {formattings[sublist_start]}
             else:
-                potential_formattings = get_potential_formattings(
-                    new_sublist_component=subcomponents[sublist_end - 1]
-                )
+                update_potential_formattings()
 
                 if not potential_formattings:
                     # There are no more potential formattings that don't conflict with
