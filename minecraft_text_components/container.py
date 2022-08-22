@@ -8,8 +8,8 @@ class ContainerMetaclass(ABCMeta):
     def __getattr__(self, name: str):
         if name == "width":
             raise AttributeError(
-                "The container width is unset. For information on how to set it, see "
-                "the docstring of `minecraft_text_components.container`:\n\n    "
+                "The current container has no width. To learn how to set the width, "
+                "see the docstring of `minecraft_text_components.container`:\n\n    "
                 + re.sub(r"\n {4}$", "", cast(str, container.__doc__))
             )
 
@@ -20,20 +20,34 @@ class container(AbstractContextManager["container"], metaclass=ContainerMetaclas
     To set the container width for the duration of a `with` block:
 
     >>> with container.chat:
-    >>>     ...
+    >>>     print(container.width)
+    320
 
     >>> with container(123):
-    >>>     ...
+    >>>     print(container.width)
+    123
+
+    >>> with container.none:
+    >>>     print(container.width)
+    AttributeError
 
     To set the container width persistently:
 
     >>> container.width = container.chat.width
-    >>> ...
+    >>> print(container.width)
+    320
 
     >>> container.width = 123
-    >>> ...
+    >>> print(container.width)
+    123
+
+    >>> del container.width
+    >>> print(container.width)
+    AttributeError
     """
 
+    # A container with no defined width.
+    none: ClassVar["container"]
     # A container with the width of chat with default settings.
     chat: ClassVar["container"]
     # A container with the width of a written book.
@@ -43,24 +57,33 @@ class container(AbstractContextManager["container"], metaclass=ContainerMetaclas
 
     width: float
 
-    _past_widths: Final[list[float]]
+    _past_widths: Final[list[float | None]]
 
-    def __init__(self, width: float):
-        self.width = width
+    def __init__(self, width: float | None):
+        if width is not None:
+            self.width = width
+
         self._past_widths = []
 
     def __enter__(self):
-        self._past_widths.append(container.width)
-        container.width = self.width
+        self._past_widths.append(getattr(container, "width", None))
+        if hasattr(self, "width"):
+            container.width = self.width
+
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
-        container.width = self._past_widths.pop()
+        previous_width = self._past_widths.pop()
+        if previous_width is None:
+            del container.width
+        else:
+            container.width = previous_width
 
     def __repr__(self):
-        return f"container(width={self.width})"
+        return f"container(width={getattr(self, 'width', None)})"
 
 
+container.none = container(None)
 container.chat = container(320)
 container.book = container(114)
 container.sign = container(90)
