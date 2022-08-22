@@ -6,7 +6,7 @@ from functools import cache, cached_property
 from types import EllipsisType
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast
 
-from ..formatting import FORMATTING_KEYS, get_formatting, is_affected_by_inheriting
+from ..formatting import get_formatting, is_affected_by_inheriting
 from ..helpers import json_str
 from ..prevent_inheritance import prevent_inheritance
 from ..types import (
@@ -65,23 +65,6 @@ def get_component_formatting(items: Iterable[FormattingItem]):
 
 def get_cost(formatting_items: Iterable[FormattingItem]):
     return sum(item.cost for item in formatting_items)
-
-
-def set_component_formatting(
-    component: FlatTextComponent, formatting: TextComponentFormatting
-):
-    """Returns a `TextComponentDict` with the content of `component` and the formatting of
-    `formatting`.
-    """
-
-    if isinstance(component, dict):
-        content = {
-            key: value for key, value in component.items() if key not in FORMATTING_KEYS
-        }
-    else:
-        content = {"text": component}
-
-    return cast(TextComponentDict, content | formatting)
 
 
 def factor_common_formatting(subcomponents: list[FlatTextComponent]):
