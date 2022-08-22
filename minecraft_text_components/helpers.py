@@ -15,8 +15,10 @@ def js_str(component: TextComponentText) -> str:
     "true"
     """
 
-    if isinstance(component, bool):
-        return str(component).lower()
+    if component is False:
+        return "false"
+    if component is True:
+        return "true"
 
     return str(component)
 
