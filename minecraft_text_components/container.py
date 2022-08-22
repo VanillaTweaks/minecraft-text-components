@@ -3,8 +3,6 @@ from abc import ABCMeta
 from contextlib import AbstractContextManager
 from typing import Any, ClassVar, Final, cast
 
-DOC_TRAILING_WHITESPACE = re.compile(r"\n {4}$")
-
 
 class ContainerMetaclass(ABCMeta):
     def __getattr__(self, name: str):
@@ -12,7 +10,7 @@ class ContainerMetaclass(ABCMeta):
             raise AttributeError(
                 "The container width is unset. For information on how to set it, see "
                 "the docstring of `minecraft_text_components.container`:\n\n    "
-                + re.sub(DOC_TRAILING_WHITESPACE, "", cast(str, container.__doc__))
+                + re.sub(r"\n {4}$", "", cast(str, container.__doc__))
             )
 
 
