@@ -1,6 +1,6 @@
 from .alignment import center, local_center, local_right, right
 from .columns import columns
-from .container import container
+from .container import ContainerMetaclass, container
 from .flat import flat
 from .formatting import (
     FORMATTING_KEYS,
@@ -49,9 +49,16 @@ from .wrap import wrap
 
 __all__ = [
     "center",
+    "local_center",
+    "local_right",
+    "right",
     "columns",
+    "ContainerMetaclass",
     "container",
     "flat",
+    "FORMATTING_KEYS",
+    "WHITESPACE_AFFECTED_BY_KEYS",
+    "WHITESPACE_UNAFFECTED_BY_KEYS",
     "get_formatting",
     "get_formatting_keys",
     "is_affected_by_inheriting",
@@ -59,19 +66,13 @@ __all__ = [
     "js_str",
     "json_str",
     "join",
-    "local_center",
-    "local_right",
     "minify",
     "overlap",
     "pad_each_line",
     "prevent_inheritance",
-    "right",
     "split",
     "style",
     "trim",
-    "whitespace",
-    "wrap",
-    # Types:
     "FlatTextComponent",
     "TextComponent",
     "TextComponentBlockNBTDict",
@@ -94,8 +95,6 @@ __all__ = [
     "TextComponentText",
     "TextComponentTextDict",
     "TextComponentTranslationDict",
-    # Constants:
-    "FORMATTING_KEYS",
-    "WHITESPACE_AFFECTED_BY_KEYS",
-    "WHITESPACE_UNAFFECTED_BY_KEYS",
+    "whitespace",
+    "wrap",
 ]

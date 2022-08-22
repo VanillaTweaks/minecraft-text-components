@@ -1,16 +1,27 @@
+import re
+from abc import ABCMeta
 from contextlib import AbstractContextManager
-from dataclasses import dataclass, field
-from typing import Any, ClassVar, Final
+from typing import Any, ClassVar, Final, cast
+
+DOC_TRAILING_WHITESPACE = re.compile(r"\n {4}$")
 
 
-@dataclass
-class container(AbstractContextManager["container"]):
+class ContainerMetaclass(ABCMeta):
+    def __getattr__(self, name: str):
+        if name == "width":
+            raise AttributeError(
+                "The container width is unset. For information on how to set it, see "
+                "the docstring of `minecraft_text_components.container`:\n\n    "
+                + re.sub(DOC_TRAILING_WHITESPACE, "", cast(str, container.__doc__))
+            )
+
+
+class container(AbstractContextManager["container"], metaclass=ContainerMetaclass):
     """A context manager for the maximum advance of a line of text in in-game pixels.
-    Defaults to `container.chat`.
 
     To set the container width for the duration of a `with` block:
 
-    >>> with container.book:
+    >>> with container.chat:
     >>>     ...
 
     >>> with container(123):
@@ -18,7 +29,7 @@ class container(AbstractContextManager["container"]):
 
     To set the container width persistently:
 
-    >>> container.width = container.book.width
+    >>> container.width = container.chat.width
     >>> ...
 
     >>> container.width = 123
@@ -34,7 +45,11 @@ class container(AbstractContextManager["container"]):
 
     width: float
 
-    _past_widths: Final = field(default_factory=list[float], init=False, repr=False)
+    _past_widths: Final[list[float]]
+
+    def __init__(self, width: float):
+        self.width = width
+        self._past_widths = []
 
     def __enter__(self):
         self._past_widths.append(container.width)
@@ -44,10 +59,10 @@ class container(AbstractContextManager["container"]):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
         container.width = self._past_widths.pop()
 
+    def __repr__(self):
+        return f"container(width={self.width})"
+
 
 container.chat = container(320)
 container.book = container(114)
 container.sign = container(90)
-
-# Set the default container to chat.
-container.width = container.chat.width
