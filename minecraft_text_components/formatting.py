@@ -1,10 +1,11 @@
 from collections.abc import Iterable
+from typing import get_type_hints
 
 from .helpers import js_str
 from .regex import LINE_BREAKS
 from .types import FlatTextComponent, TextComponent, TextComponentFormatting
 
-FORMATTING_KEYS = frozenset(TextComponentFormatting.__annotations__.keys())
+FORMATTING_KEYS = frozenset(get_type_hints(TextComponentFormatting).keys())
 
 WHITESPACE_UNAFFECTED_BY_KEYS = frozenset({"color", "italic"})
 WHITESPACE_AFFECTED_BY_KEYS = FORMATTING_KEYS - WHITESPACE_UNAFFECTED_BY_KEYS
