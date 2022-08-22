@@ -34,8 +34,8 @@ def reduce(component: FlatTextComponent):
                 # Check if the text is only line breaks, so formatting does nothing.
                 or (text_is_whitespace and LINE_BREAKS.match(text))
             ):
-                # Reduce this component to a plain string.
-                return text
+                # Reduce this component to plain text.
+                return component["text"]
 
         elif "with" in component:
             # Recursively minify `with` values.
