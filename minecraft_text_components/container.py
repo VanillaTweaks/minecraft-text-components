@@ -7,12 +7,30 @@ from typing import Any, ClassVar, Final
 class container(AbstractContextManager["container"]):
     """A context manager for the maximum advance of a line of text in in-game pixels.
     Defaults to `container.chat` when not in any context.
+
+    To set the container width persistently:
+
+    >>> container.width = container.book.width
+    >>> ...
+
+    >>> container.width = 123
+    >>> ...
+
+    To set the container width for the duration of a `with` block:
+
+    >>> with container.book:
+    >>>     ...
+
+    >>> with container(123):
+    >>>     ...
     """
 
     # A container with the width of chat with default settings.
     chat: ClassVar["container"]
     # A container with the width of a written book.
     book: ClassVar["container"]
+    # A container with the width of a sign.
+    sign: ClassVar["container"]
 
     width: float
 
@@ -29,6 +47,7 @@ class container(AbstractContextManager["container"]):
 
 container.chat = container(320)
 container.book = container(114)
+container.sign = container(90)
 
 # Set the default container to chat.
 container.width = container.chat.width
