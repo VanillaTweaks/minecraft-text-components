@@ -8,4 +8,4 @@ NON_WHITESPACE_PATTERN = re.compile(r"(\S+)")
 
 
 def trim(component: TextComponent):
-    return join(list(split(component, NON_WHITESPACE_PATTERN))[1:-1], "")
+    return join("", list(split(component, NON_WHITESPACE_PATTERN))[1:-1])

@@ -192,4 +192,4 @@ def overlap(*components: TextComponent):
 
         output_lines.append(output_line)
 
-    return minify(join(output_lines, "\n"))
+    return minify(join("\n", output_lines))

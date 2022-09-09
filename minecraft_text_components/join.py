@@ -1,8 +1,10 @@
+from collections.abc import Iterable
+
 from .minify import minify
 from .types import TextComponent
 
 
-def join(components: list[TextComponent], sep: TextComponent):
+def join(sep: TextComponent, components: Iterable[TextComponent]):
     """Concatenates a list of text components into one text component, automatically
     minified.
     """

@@ -48,4 +48,4 @@ def pad_each_line(
         return ["", padding, line]
 
     lines = split(wrap(component), "\n")
-    return join([pad_line(line) for line in lines], "\n")
+    return join("\n", (pad_line(line) for line in lines))
