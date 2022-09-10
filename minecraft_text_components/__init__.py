@@ -1,3 +1,4 @@
+from . import contrib
 from .alignment import center, local_center, local_right, right
 from .columns import columns
 from .container import ContainerMetaclass, container
@@ -49,6 +50,7 @@ from .wrap import wrap
 
 __all__ = [
     "center",
+    "contrib",
     "local_center",
     "local_right",
     "right",

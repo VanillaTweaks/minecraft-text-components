@@ -25,11 +25,18 @@ keywords = [
 python = "^3.10"
 typing-extensions = "^4.3.0"
 
+beet = {version = "^0.71.0", optional = true}
+mecha = {version = "^0.54.9", optional = true}
+tokenstream = {version = "^1.4.2", optional = true}
+
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
 isort = "^5.10.1"
 requests = "^2.27.1"
 Pillow = "^9.1.0"
+
+[tool.poetry.extras]
+beet = ["beet", "mecha"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
