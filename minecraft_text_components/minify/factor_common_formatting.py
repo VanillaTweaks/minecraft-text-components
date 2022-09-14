@@ -223,7 +223,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             new_sublist_component = subcomponents[sublist_end - 1]
             keys_to_remove = {
                 key
-                for key in potential_items_by_key.keys()
+                for key in potential_items_by_key
                 if formatting_key_affects_component(key, new_sublist_component)
             }
 
