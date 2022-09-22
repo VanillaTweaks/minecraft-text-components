@@ -1,6 +1,6 @@
 from typing import Literal, TypedDict, final
 
-from typing_extensions import NotRequired, Required
+from typing_extensions import NotRequired
 
 TextComponentText = str | int | float | bool
 
@@ -30,10 +30,10 @@ class TextComponentItem(TypedDict):
 
 
 @final
-class TextComponentEntity(TypedDict, total=False):
-    name: "TextComponent"
-    type: Required[str]
-    id: Required[str]
+class TextComponentEntity(TypedDict):
+    name: NotRequired["TextComponent"]
+    type: str
+    id: str
 
 
 @final
@@ -108,9 +108,9 @@ class TextComponentScoreDict(TextComponentDictBase):
 
 
 @final
-class TextComponentSelectorDict(TextComponentDictBase, total=False):
-    selector: Required[str]
-    separator: "TextComponent"
+class TextComponentSelectorDict(TextComponentDictBase):
+    selector: str
+    separator: NotRequired["TextComponent"]
 
 
 @final
@@ -118,10 +118,10 @@ class TextComponentKeybindDict(TextComponentDictBase):
     keybind: str
 
 
-class TextComponentDictNBTBase(TextComponentDictBase, total=False):
-    nbt: Required[str]
-    interpret: bool
-    separator: "TextComponent"
+class TextComponentDictNBTBase(TextComponentDictBase):
+    nbt: str
+    interpret: NotRequired[bool]
+    separator: NotRequired["TextComponent"]
 
 
 @final
