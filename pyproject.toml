@@ -25,9 +25,8 @@ keywords = [
 python = "^3.10"
 typing-extensions = "^4.3.0"
 
-beet = {version = "^0.71.0", optional = true}
-mecha = {version = "^0.54.9", optional = true}
-tokenstream = {version = "^1.4.2", optional = true}
+beet = {version = "^0.73.3", optional = true}
+mecha = {version = "^0.57.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
