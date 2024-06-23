@@ -1,5 +1,4 @@
-from .advances import get_advance
-from .advances import get_line_advance
+from .advances import get_advance, get_line_advance
 from .container import container
 from .overlap import overlap
 from .pad_each_line import pad_each_line
@@ -7,7 +6,12 @@ from .types import TextComponent
 from .whitespace import SPACE_ADVANCE, whitespace
 
 
-def columns(*components: TextComponent):
+def columns(
+    *components: TextComponent,
+    # Whether there should be whitespace to the left and right of all columns rather
+    #  than only between columns.
+    spacing_around_columns: bool = True,
+):
     """Places a set of components into evenly spaced columns, each column being locally
     left-aligned, automatically minified.
     """
@@ -23,17 +27,14 @@ def columns(*components: TextComponent):
 
         free_width -= component_advance
 
-    # Whether there should be whitespace to the left and right of all columns rather
-    #  than only between columns.
-    spacing_around_columns = True
-
-    # The amount of whitespace around or between each column, rounded to the nearest
-    #  valid whitespace width.
+    # The amount of whitespace around or between each column.
     column_spacing = free_width / (len(components) + 1)
 
     if column_spacing < SPACE_ADVANCE:
         # There isn't room to fit the spacing around columns, so try removing it.
         spacing_around_columns = False
+
+    if not spacing_around_columns:
         column_spacing = free_width / (len(components) - 1)
 
         if column_spacing < SPACE_ADVANCE:
