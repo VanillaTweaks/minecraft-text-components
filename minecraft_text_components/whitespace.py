@@ -35,6 +35,7 @@ def whitespace(
         raise ValueError("The `whitespace` advance must not be negative")
 
     plain_spaces, bold_spaces = divmod(advance, SPACE_ADVANCE)
+    plain_spaces -= bold_spaces
 
     component: TextComponent = []
 
