@@ -1,7 +1,7 @@
 from . import contrib
 from .alignment import center, local_center, local_right, right
 from .columns import columns
-from .container import ContainerMetaclass, container
+from .container import Container, container
 from .flat import flat
 from .formatting import (
     FORMATTING_KEYS,
@@ -55,7 +55,7 @@ __all__ = [
     "local_right",
     "right",
     "columns",
-    "ContainerMetaclass",
+    "Container",
     "container",
     "flat",
     "FORMATTING_KEYS",

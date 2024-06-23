@@ -1,21 +1,45 @@
-import re
-from abc import ABCMeta
 from contextlib import AbstractContextManager
-from typing import Any, ClassVar, Final, cast
+from typing import Any, ClassVar, Final
 
 
-class ContainerMetaclass(ABCMeta):
-    def __getattr__(self, name: str):
-        if name == "width":
-            raise AttributeError(
-                "The current container has no width. To learn how to set the width, "
-                "see the docstring of `minecraft_text_components.container`:\n\n    "
-                + re.sub(r"\n {4}$", "", cast(str, container.__doc__))
-            )
-
-
-class container(AbstractContextManager["container"], metaclass=ContainerMetaclass):
+class Container(AbstractContextManager["Container"]):
     """A context manager for the maximum advance of a line of text in in-game pixels.
+    Generally, you should use `container` instead. See `container` for more information.
+    """
+
+    width: Final[float | None]
+
+    _previous_widths: list[float | None]
+
+    def __init__(self, width: float | None):
+        self.width = width
+
+        self._previous_widths = []
+
+    def __enter__(self):
+        self._previous_widths.append(getattr(container, "width", None))
+
+        if self.width is None:
+            del container.width
+        else:
+            container.width = self.width
+
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
+        previous_width = self._previous_widths.pop()
+
+        if previous_width is None:
+            del container.width
+        else:
+            container.width = previous_width
+
+    def __repr__(self):
+        return f"container(width={self.width})"
+
+
+class container:
+    """Holds the current maximum advance of a line of text in in-game pixels.
 
     To set the container width for the duration of a `with` block:
 
@@ -47,43 +71,15 @@ class container(AbstractContextManager["container"], metaclass=ContainerMetaclas
     """
 
     # A container with no defined width.
-    none: ClassVar["container"]
+    none: ClassVar[Container] = Container(None)
     # A container with the width of chat with default settings.
-    chat: ClassVar["container"]
+    chat: ClassVar[Container] = Container(320)
     # A container with the width of a written book.
-    book: ClassVar["container"]
+    book: ClassVar[Container] = Container(114)
     # A container with the width of a sign.
-    sign: ClassVar["container"]
+    sign: ClassVar[Container] = Container(90)
 
-    width: float
+    width: ClassVar[float]
 
-    _past_widths: Final[list[float | None]]
-
-    def __init__(self, width: float | None):
-        if width is not None:
-            self.width = width
-
-        self._past_widths = []
-
-    def __enter__(self):
-        self._past_widths.append(getattr(container, "width", None))
-        if hasattr(self, "width"):
-            container.width = self.width
-
-        return self
-
-    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
-        previous_width = self._past_widths.pop()
-        if previous_width is None:
-            del container.width
-        else:
-            container.width = previous_width
-
-    def __repr__(self):
-        return f"container(width={getattr(self, 'width', None)})"
-
-
-container.none = container(None)
-container.chat = container(320)
-container.book = container(114)
-container.sign = container(90)
+    def __new__(cls, width: float | None):
+        return Container(width)
