@@ -15,8 +15,8 @@ from .whitespace import whitespace
 #  things to overlap it.
 OVERLAPPABLE_WHITESPACE_PATTERN = re.compile(r"(^ +| {2,}| +$)")
 
-# The maximum value that `whitespace_offset` is can be before additional
-#  overflow correction attempts must be disallowed.
+# The maximum absolute value that `whitespace_offset` can be before additional overflow
+#  correction attempts must be disallowed.
 MAX_WHITESPACE_OFFSET = 4
 
 
@@ -34,8 +34,8 @@ def overlap(*components: TextComponent):
     """Overlaps multiple text components as if they were rendered onto the same
     position, automatically minified.
 
-    >>> overlap("t   t", "  t")
-    "t t t"
+    >>> overlap("a   c", "  b")
+    "a b c"
     """
 
     # A list of lines, each line represented by a list of `TextComponentRange`s.
@@ -47,8 +47,8 @@ def overlap(*components: TextComponent):
 
         for line_index, component_line in enumerate(component_lines):
             # Create the list in `range_lines` if it doesn't exist.
-            if line_index >= len(range_lines):
-                range_lines[line_index] = []
+            while line_index >= len(range_lines):
+                range_lines.append([])
 
             range_line = range_lines[line_index]
 
@@ -57,8 +57,8 @@ def overlap(*components: TextComponent):
             range_width = 0
 
             def end_range():
-                """Ends the `range_value` inserts a range for it into the `range_line`
-                (if the `range_value` was non-empty).
+                """Ends the `range_value` and inserts a range for it into the
+                `range_line` (if the `range_value` was non-empty).
                 """
 
                 if not range_value:
@@ -68,11 +68,11 @@ def overlap(*components: TextComponent):
                 #  `range_value` should be inserted.
                 range_index = 0
 
-                for i, range in enumerate(range_line):
+                for range in range_line:
                     if range.start > range_start:
                         break
 
-                    range_index = i
+                    range_index += 1
 
                 def raise_collision_error(conflicting_subcomponent: TextComponent):
                     raise ValueError(
@@ -162,7 +162,7 @@ def overlap(*components: TextComponent):
                 previous_range_end += whitespace_advance + range_width
 
                 if whitespace_offset == 0:
-                    initial_whitespace_advances[range_index] = whitespace_advance
+                    initial_whitespace_advances.append(whitespace_advance)
                 elif whitespace_offset_remaining:
                     initial_whitespace_advance = initial_whitespace_advances[
                         range_index
@@ -183,7 +183,7 @@ def overlap(*components: TextComponent):
             #  correction.
             whitespace_offset -= 0.5
 
-            if whitespace_offset > MAX_WHITESPACE_OFFSET:
+            if abs(whitespace_offset) > MAX_WHITESPACE_OFFSET:
                 # No more attempts can be made, and the line still overflows.
                 raise ValueError(
                     "The following text component cannot fit on one line:\n"
