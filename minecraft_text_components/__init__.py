@@ -1,4 +1,5 @@
 from . import contrib
+from .advances import get_advance, get_char_advance, get_line_advance
 from .alignment import center, local_center, local_right, right
 from .columns import columns
 from .container import Container, container
@@ -49,8 +50,11 @@ from .whitespace import whitespace
 from .wrap import wrap
 
 __all__ = [
-    "center",
     "contrib",
+    "get_advance",
+    "get_char_advance",
+    "get_line_advance",
+    "center",
     "local_center",
     "local_right",
     "right",
