@@ -28,16 +28,15 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
 
         if isinstance(subcomponent, dict):
             if "text" in subcomponent:
-                # The subcomponent has `text` with distinguishable formatting.
-                #
-                # (We know the formatting is distinguishable because the previous step
-                #  of the `minify` algorithm is `reduce`, which removes
-                #  indistinguishable formatting.)
+                # The subcomponent has `text` with distinguishable formatting. (We know
+                # the formatting is distinguishable because the previous step of the
+                # `minify` algorithm is `reduce`, which removes indistinguishable
+                # formatting.)
 
                 if isinstance(previous_subcomponent, dict):
                     if "text" in previous_subcomponent:
                         # Both this subcomponent and the previous one have `text` with
-                        #  distinguishable formatting.
+                        # distinguishable formatting.
 
                         text = js_str(subcomponent["text"])
                         previous_text = js_str(previous_subcomponent["text"])
@@ -56,10 +55,10 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
 
                             if not text_is_whitespace:
                                 # The previous subcomponent might be whitespace, so
-                                #  merging this subcomponent into it might cause some of
-                                #  this subcomponent's formatting to be lost. Instead,
-                                #  because this subcomponent isn't whitespace, merge the
-                                #  previous subcomponent into this one.
+                                # merging this subcomponent into it might cause some of
+                                # this subcomponent's formatting to be lost. Instead,
+                                # because this subcomponent isn't whitespace, merge the
+                                # previous subcomponent into this one.
                                 previous_subcomponent = subcomponent
 
                             previous_subcomponent["text"] = previous_text + text
@@ -69,7 +68,7 @@ def merged(subcomponents: Iterator[FlatTextComponent]):
                     previous_subcomponent, subcomponent
                 ):
                     # This subcomponent has `text` with distinguishable properties, the
-                    #  previous subcomponent is plain text, and they can be merged.
+                    # previous subcomponent is plain text, and they can be merged.
 
                     text = js_str(subcomponent["text"])
                     previous_text = js_str(previous_subcomponent)

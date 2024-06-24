@@ -1,10 +1,9 @@
 import json
 import math
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 import requests
 from PIL import Image
-from typing_extensions import NotRequired
 
 
 class SpaceFontProvider(TypedDict):
@@ -57,10 +56,10 @@ KERNING_WIDTH = 1
 DEFAULT_GLYPH_HEIGHT = 8
 
 # A mapping from each character to its advance amount in in-game pixels, excluding code
-#  points only covered by the legacy unicode font.
+# points only covered by the legacy unicode font.
 advances: dict[str, int] = {}
 # A mapping from each legacy unicode font character to its advance amount in in-game
-#  pixels, excluding ones already covered by `advances`.
+# pixels, excluding ones already covered by `advances`.
 legacy_unicode_advances: dict[str, int] = {}
 
 session = requests.Session()
@@ -100,7 +99,7 @@ for provider in font["providers"]:
 
                 def get_glyph_width():
                     # Find the first non-empty column of pixels from the right within
-                    #  the glyph.
+                    # the glyph.
                     for x in reversed(range(column_width)):
                         for y in range(row_height):
                             if texture.getpixel(  # type: ignore
@@ -112,8 +111,8 @@ for provider in font["providers"]:
                 glyph_width = get_glyph_width()
 
                 # For negative `glyph_scale`s, it makes no sense to add 0.5 and then
-                #  truncate instead of rounding, but it's straight from the game's
-                #  code, so we're going with it.
+                # truncate instead of rounding, but it's straight from the game's code,
+                # so we're going with it.
                 advance = math.trunc(glyph_width * glyph_scale + 0.5) + KERNING_WIDTH
 
                 advances[char] = advance
@@ -133,7 +132,7 @@ for provider in font["providers"]:
                 continue
 
             # A byte with the start position of the character in the left half and the
-            #  end position in the right half.
+            # end position in the right half.
             size = sizes[char_code]
             char_start = size >> 4
             char_end = (size & 0xF) + 1

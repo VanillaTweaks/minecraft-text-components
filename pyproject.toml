@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "minecraft-text-components"
-version = "3.3.0"
+version = "3.3.1"
 description = "A library for manipulating Minecraft's raw JSON text components"
 license = "MIT"
-authors = ["VanillaTweaks <team@vanillatweaks.net>"]
+authors = ["Vanilla Tweaks <team@vanillatweaks.net>"]
 readme = "README.md"
 homepage = "https://github.com/VanillaTweaks/minecraft-text-components"
 repository = "https://github.com/VanillaTweaks/minecraft-text-components"

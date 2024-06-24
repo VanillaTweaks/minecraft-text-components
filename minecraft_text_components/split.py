@@ -47,16 +47,14 @@ def split(
     component: TextComponent,
     sep: UncallableSeparator = None,
     maxsplit: int = -1,
-) -> Generator[TextComponent, None, None]:
-    ...
+) -> Generator[TextComponent, None, None]: ...
 
 
 @overload
 def split(
     component: TextComponent,
     sep: CallableSeparator,
-) -> Generator[TextComponent, None, None]:
-    ...
+) -> Generator[TextComponent, None, None]: ...
 
 
 def split(
@@ -105,7 +103,7 @@ def split(
                 continue
 
             # We can assert `previous_subcomponent` isn't `None` because we appended to
-            #  it in the first iteration.
+            # it in the first iteration.
             assert previous_subcomponent is not None
 
             yield previous_subcomponent

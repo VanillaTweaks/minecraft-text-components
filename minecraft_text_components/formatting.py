@@ -75,7 +75,7 @@ def is_affected_by_inheriting(component: FlatTextComponent, keys: Iterable[str])
 
     if isinstance(component, dict):
         # Check if any formatting key that affects this component is missing from the
-        #  component, in which case the component would inherit it.
+        # component, in which case the component would inherit it.
 
         if text_is_whitespace:
             # Ignore the keys that don't affect whitespace.

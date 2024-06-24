@@ -40,7 +40,7 @@ class FormattingItem:
 FormattingSet = frozenset[FormattingItem]
 
 # A list for which the first element is the parent formatting (if there is any), and
-#  each ellipsis is a placeholder for a subcomponent inheriting from the formatting.
+# each ellipsis is a placeholder for a subcomponent inheriting from the formatting.
 FactoredFormattingList = list["FormattingSet | EllipsisType | FactoredFormattingList"]
 
 
@@ -122,7 +122,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         """Factors a range of the inputted `formattings` and gets its cost."""
 
         # The formattings which only inherit from the parent and precede the next
-        #  sublist.
+        # sublist.
         formattings_covered_by_parent: FactoredFormattingList = []
 
         # The index in `subcomponents` at which the next sublist needs to start.
@@ -134,12 +134,12 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 formattings_covered_by_parent.append(...)
             else:
                 # This formatting isn't covered by the parent, so this is where the next
-                #  sublist needs to start in order for everything to be covered.
+                # sublist needs to start in order for everything to be covered.
                 break
 
         if sublist_start == end:
             # All the formattings are the same as the parent, so no factoring needs to
-            #  be done.
+            # be done.
             return FactoredFormattings(value=formattings_covered_by_parent, cost=0)
 
         best_cost = math.inf
@@ -150,7 +150,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
         # The formattings to consider ever applying to a sublist.
         potential_formattings: set[FormattingSet] = set()
         # A mapping from each formatting key to the set of formatting items which are in
-        #  `potential_formattings` with that key. Excludes keys without any items.
+        # `potential_formattings` with that key. Excludes keys without any items.
         potential_items_by_key: dict[str, set[FormattingItem]] = {}
 
         parent_keys = {item.key for item in parent}
@@ -160,8 +160,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             item with the specified key. May be faster than `is_affected_by_inheriting`.
             """
 
-            # A parent formatting key also can't possibly conflict with a
-            #  sublist component, so we can check that first as a shortcut.
+            # A parent formatting key also can't possibly conflict with a sublist
+            # component, so we can check that first as a shortcut.
             return key not in parent_keys and is_affected_by_inheriting(
                 component, {key}
             )
@@ -177,7 +177,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 item
                 for item in first_sublist_formatting
                 # Exclude items in the parent, since it's pointless to make a new
-                #  sublist for an item the parent already has.
+                # sublist for an item the parent already has.
                 if item not in parent
                 # Exclude items that can only be found once in a sublist.
                 and any(item in formatting for formatting in non_first_formattings)
@@ -218,7 +218,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 return
 
             # Remove any `potential_formattings` and `potential_items_by_key` that
-            #  conflict with the new sublist component.
+            # conflict with the new sublist component.
 
             new_sublist_component = subcomponents[sublist_end - 1]
             keys_to_remove = {
@@ -241,14 +241,14 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
 
             if sublist_length == 1:
                 # If the sublist only has one element, it's unnecessary to compute and
-                #  try all the `potential_formattings`.
+                # try all the `potential_formattings`.
                 formattings_to_try = {formattings[sublist_start]}
             else:
                 update_potential_formattings()
 
                 if not potential_formattings:
                     # There are no more potential formattings that don't conflict with
-                    #  any of the sublist's components.
+                    # any of the sublist's components.
                     break
 
                 last_sublist_formatting = formattings[sublist_end - 1]
@@ -258,8 +258,8 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                     if formatting <= last_sublist_formatting
                 ):
                     # The last sublist component wouldn't benefit from these factorings,
-                    #  so an optimal sublist range could just as well exclude this
-                    #  component from the end.
+                    # so an optimal sublist range could just as well exclude this
+                    # component from the end.
                     continue
 
                 formattings_to_try = potential_formattings
@@ -284,7 +284,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 cost += sublist_factoring.cost
                 if len(sublist_factoring.value) > 1:
                     # Add 2 for the cost of the square brackets when the sublist can't
-                    #  be reduced to just one element.
+                    # be reduced to just one element.
                     cost += 2
 
                 if cost >= best_cost:
@@ -353,7 +353,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                 append_flat_subcomponent(next(subcomponent_iterator))
                 continue
 
-            subcomponent = get_factored_component(cast(FactoredFormattingList, item))
+            subcomponent = get_factored_component(item)
 
             if isinstance(subcomponent, list):
                 end_flat_subcomponents()
@@ -370,7 +370,7 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
             if (
                 (
                     # If taking the `formatting`'s items would affect the component, the
-                    #  component shouldn't take them.
+                    # component shouldn't take them.
                     isinstance(output[0], dict)
                     and is_affected_by_inheriting(
                         cast(
@@ -383,27 +383,27 @@ def factor_common_formatting(subcomponents: list[FlatTextComponent]):
                             },
                         ),
                         # Exclude the `formatting` keys `output[0]` doesn't have, since
-                        #  those ones are specifically intended to affect the component.
+                        # those ones are specifically intended to affect the component.
                         formatting.keys() & output[0].items(),
                     )
                 )
                 # The algorithm would've put the `formatting` on that list to begin with
-                #  if it were optimal.
+                # if it were optimal.
                 or isinstance(output[0], list)
             ):
                 # The formatting must be inserted as a new first element instead of
-                #  being applied to the existing one.
+                # being applied to the existing one.
 
                 # It's not necessary to call `prevent_inheritance` here because the
-                #  original first element won't be inherited anyway, since we're about
-                #  to insert a new first element that should be inherited instead.
+                # original first element won't be inherited anyway, since we're about to
+                # insert a new first element that should be inherited instead.
 
                 output.insert(0, cast(TextComponentDict, {"text": ""} | formatting))
 
             else:
                 # If the first element has formatting the other elements would inherit
-                #  but shouldn't, then we should let `prevent_inheritance` insert an
-                #  empty string to take the `formatting` instead of the first element.
+                # but shouldn't, then we should let `prevent_inheritance` insert an
+                # empty string to take the `formatting` instead of the first element.
                 output = prevent_inheritance(output)
 
                 if isinstance(output[0], dict):

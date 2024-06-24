@@ -44,7 +44,7 @@ def flat(
         return
 
     if formatting:
-        yield {"text": component, **formatting}  # type: ignore
+        yield {"text": component, **formatting}
         return
 
     yield component

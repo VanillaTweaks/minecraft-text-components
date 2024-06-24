@@ -1,6 +1,4 @@
-from typing import Literal, TypedDict, final
-
-from typing_extensions import NotRequired
+from typing import Literal, NotRequired, TypedDict, final
 
 TextComponentText = str | int | float | bool
 
@@ -155,5 +153,5 @@ TextComponentDict = (
 TextComponent = TextComponentText | TextComponentDict | list["TextComponent"]
 
 # Objects of this type should be completely flat and never have an `extra` key, even
-#  though this type does not (and practically cannot) enforce that.
+# though this type does not (and practically cannot) enforce that.
 FlatTextComponent = TextComponentText | TextComponentDict

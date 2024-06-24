@@ -61,12 +61,12 @@ def wrap(component: TextComponent):
                 for char in split(
                     word,
                     # Starting with `""` ensures every input (e.g. `["ab", "cd"]`) is
-                    #  split into a list in which each item has at most one character
-                    #  (e.g. `["", "a", ["", "b", ""], "c", "d"]`) rather than a list in
-                    #  which some items have multiple characters (e.g.
-                    #  `["a", ["", "b", "c"], "d"]`), since the first item in any list
-                    #  returned from this lambda can be appended to the previous item in
-                    #  the `split` output.
+                    # split into a list in which each item has at most one character
+                    # (e.g. `["", "a", ["", "b", ""], "c", "d"]`) rather than a list in
+                    # which some items have multiple characters (e.g.
+                    # `["a", ["", "b", "c"], "d"]`), since the first item in any list
+                    # returned from this lambda can be appended to the previous item in
+                    # the `split` output.
                     lambda value: ["", *value],
                 ):
                     # `char` either is empty or has only a single character.

@@ -9,7 +9,7 @@ SPACE_ADVANCE = int(get_char_advance(" "))
 def whitespace(
     advance: float,
     # Whether to floor the inputted width to the nearest valid whitespace, rather than
-    #  (roughly) round which is the default.
+    # (roughly) round which is the default.
     floor: bool = False,
 ) -> TextComponent:
     """Returns a text component of a combination of plain and bold spaces to achieve a
@@ -17,7 +17,7 @@ def whitespace(
     """
 
     # If the advance is small, then round up to the smallest valid advance, since the
-    #  advance is most likely intended to be non-zero (unless `floor`).
+    # advance is most likely intended to be non-zero (unless `floor`).
     if advance > 0 and advance < SPACE_ADVANCE:
         advance = 0 if floor else SPACE_ADVANCE
 

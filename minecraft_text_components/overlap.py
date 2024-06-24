@@ -11,12 +11,12 @@ from .types import TextComponent
 from .whitespace import whitespace
 
 # The reason it's ` {2,}` instead of ` +` is because a single space in the middle of the
-#  string is most likely just a normal space that should not be adjustable or allow
-#  things to overlap it.
+# string is most likely just a normal space that should not be adjustable or allow
+# things to overlap it.
 OVERLAPPABLE_WHITESPACE_PATTERN = re.compile(r"(^ +| {2,}| +$)")
 
 # The maximum absolute value that `whitespace_offset` can be before additional overflow
-#  correction attempts must be disallowed.
+# correction attempts must be disallowed.
 MAX_WHITESPACE_OFFSET = 4
 
 
@@ -65,7 +65,7 @@ def overlap(*components: TextComponent):
                     return
 
                 # The index in the `range_line` at which the new range containing the
-                #  `range_value` should be inserted.
+                # `range_value` should be inserted.
                 range_index = 0
 
                 for range in range_line:
@@ -100,7 +100,7 @@ def overlap(*components: TextComponent):
                 range_line.insert(range_index, range)
 
             # The `component_line` split into a list in which odd indexes have
-            #  whitespace-only segments and even indexes do not.
+            # whitespace-only segments and even indexes do not.
             subcomponents = split(component_line, OVERLAPPABLE_WHITESPACE_PATTERN)
 
             for i, subcomponent in enumerate(subcomponents):
@@ -108,7 +108,7 @@ def overlap(*components: TextComponent):
 
                 if i % 2 == 0:
                     # This subcomponent does not contain only whitespace, so add it to
-                    #  the `range_value` if it isn't empty.
+                    # the `range_value` if it isn't empty.
 
                     if subcomponent_advance:
                         range_value.append(subcomponent)
@@ -116,7 +116,7 @@ def overlap(*components: TextComponent):
 
                 else:
                     # This subcomponent contains only whitespace, so end the
-                    #  `range_value`.
+                    # `range_value`.
 
                     end_range()
 
@@ -131,7 +131,7 @@ def overlap(*components: TextComponent):
 
     for range_line in range_lines:
         # The amount (always negative) of in-game pixels to add to the whitespace in
-        #  order to avoid the line overflowing the container.
+        # order to avoid the line overflowing the container.
         whitespace_offset = 0
         # The amount that `output_line`'s advance exceeds the container width.
         overflowing_advance = 0
@@ -145,7 +145,7 @@ def overlap(*components: TextComponent):
             # The position in the line at which the previous range ended.
             previous_range_end = 0
             # The amount that whitespace advances still need to be offset in order to
-            #  apply the full `whitespace_offset`.
+            # apply the full `whitespace_offset`.
             whitespace_offset_remaining = whitespace_offset
 
             for range_index, range in enumerate(range_line):
@@ -180,7 +180,7 @@ def overlap(*components: TextComponent):
                 break
 
             # The line overflows the container, so try again with more overflow
-            #  correction.
+            # correction.
             whitespace_offset -= 0.5
 
             if abs(whitespace_offset) > MAX_WHITESPACE_OFFSET:

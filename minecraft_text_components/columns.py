@@ -9,7 +9,7 @@ from .whitespace import SPACE_ADVANCE, whitespace
 def columns(
     *components: TextComponent,
     # Whether there should be whitespace to the left and right of all columns rather
-    #  than only between columns.
+    # than only between columns.
     spacing_around_columns: bool = True,
 ):
     """Places a set of components into evenly spaced columns, each column being locally
@@ -49,7 +49,7 @@ def columns(
     padded_columns: list[TextComponent] = []
 
     # The amount of whitespace to insert before the next component pushed to
-    #  `padded_columns`.
+    # `padded_columns`.
     preceding_whitespace = 0
 
     if spacing_around_columns:

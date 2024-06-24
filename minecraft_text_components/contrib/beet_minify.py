@@ -39,6 +39,7 @@ class MinifyTextComponentTransformer(MutatingReducer):
             return argument
 
         command_tree = self.mecha.spec.tree.get(scope)
+
         if command_tree is None:
             return argument
 
@@ -48,7 +49,7 @@ class MinifyTextComponentTransformer(MutatingReducer):
         initial_text_component = argument.evaluate()
         minified_text_component = minify(initial_text_component)
 
-        if minified_text_component == initial_text_component:
+        if initial_text_component == minified_text_component:
             return argument
 
         return AstJson.from_value(minified_text_component)
@@ -69,8 +70,8 @@ class MinifyTextComponentTransformer(MutatingReducer):
 
         for i, argument in enumerate(node.arguments):
             scope = prototype.get_argument(i).scope
-
             processed_argument = self.process_argument(argument, scope)
+
             if argument is not processed_argument:
                 changed = True
 
